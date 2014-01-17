@@ -2,6 +2,7 @@ import dataImport
 import DL
 import misc
 import Yarowsky
+import sys
 
 import numpy as np
 from sklearn import linear_model
@@ -12,8 +13,7 @@ from sklearn.preprocessing import normalize
 
 from matplotlib import pyplot as plt
 
-def commasplitter(str):
-	return str.split(',')
+
 
 
 reload(Yarowsky)
@@ -30,9 +30,12 @@ rules['X2_Incorporated'] = (0.9999000000000001,3) # Simulate Max's tie-breaking 
 # 1: person, 2: 3: corporation
 labels = DL.label(train,rules,nLabels)
 
-train2 = [','.join(train[i]) for i in range(len(train))]
-test2 = [','.join(test[i]) for i in range(len(test))]
-tfidf = TfidfVectorizer(min_df = 1, tokenizer=commasplitter)
+split_var='@'
+def splitter(str):
+	return str.split(split_var)
+train2 = [split_var.join(train[i]) for i in range(len(train))]
+test2 = [split_var.join(test[i]) for i in range(len(test))]
+tfidf = TfidfVectorizer(min_df = 1, tokenizer=splitter)
 
 train = tfidf.fit_transform(train2).tocsr()
 test = tfidf.transform(test2).tocsr()
@@ -45,8 +48,10 @@ labels = np.array(labels)
 #train_labelled_labels = [labels[i] for i in range(len(labels)) if labels[i] != 0]
 
 
-print 'vectorizer finished'
+print 'vectorizer finished for split_var',split_var,' train/test shapes are:'
 print train.shape, test.shape
+
+sys.exit()
 
 clf = linear_model.SGDClassifier(loss='log') #worse: penalty="elasticnet"
 clf.fit(train[idx,:], labels[idx])
