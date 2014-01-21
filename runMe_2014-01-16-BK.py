@@ -8,13 +8,9 @@ import numpy as np
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestClassifier 
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import normalize
+# from sklearn.preprocessing import normalize
 
 from matplotlib import pyplot as plt
-
-
-
 
 reload(Yarowsky)
 data = 'namedentity'
@@ -47,11 +43,13 @@ def splitter(str):
 	return str.split(split_var)
 train2 = [split_var.join(train[i]) for i in range(len(train))]
 test2 = [split_var.join(test[i]) for i in range(len(test))]
-tfidf = TfidfVectorizer(min_df = 1, tokenizer=splitter)
 
-
-train = tfidf.fit_transform(train2).tocsr()
-test = tfidf.transform(test2).tocsr()
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# vectorizer = TfidfVectorizer(min_df = 1, tokenizer=splitter)
+from sklearn.feature_extraction.text import CountVectorizer
+vectorizer = CountVectorizer(min_df = 2, tokenizer=splitter)
+train = vectorizer.fit_transform(train2).tocsr()
+test = vectorizer.transform(test2).tocsr()
 # train = normalize(train, copy=False)
 # test = normalize(test, copy=False)
 
@@ -61,6 +59,7 @@ labels = np.array(labels)
 #train_labelled_labels = [labels[i] for i in range(len(labels)) if labels[i] != 0]
 
 def FIGURE_out_sparse():
+	print "BOO"
 	print "train:",train
 	print "train[0]:",train[0]
 	print "train[:,0]:",train[:,0]
@@ -70,27 +69,40 @@ def FIGURE_out_sparse():
 	print "train[:,2]:",train[:,2]
 	print "train[0, 67869]:",train[0, 67869]
 	print "train[234, 1]:",train[234, 1]
-FIGURE_out_sparse()
+# FIGURE_out_sparse()
+freqs=train.sum(axis=0).flat
+print "Total number of features: ", len(freqs)
+print "Number of 1s: ", sum(1 for i in freqs if i==1)
+plt.hist(freqs, bins=100)
 
 print 'vectorizer finished for split_var',split_var,' train/test shapes are:'
 print train.shape, test.shape
 
-sys.exit()
+# sys.exit()
 
-clf = linear_model.SGDClassifier(loss='log') #worse: penalty="elasticnet"
+# clf = linear_model.SGDClassifier(loss='log') #worse: penalty="elasticnet"
+# clf.fit(train[idx,:], labels[idx])
+
+clf = linear_model.LogisticRegression() 
 clf.fit(train[idx,:], labels[idx])
 
-trainingscore = clf.score(train[idx,:], labels[idx])
-print 'SGD training score ', trainingscore
-testpredict = clf.predict(test)
-print 'SGD test score ', 1.0*np.sum(testpredict == gold)/len(testpredict)
+def print_train_and_test_error():
+	trainingscore = clf.score(train[idx,:], labels[idx])
+	print 'SGD training score ', trainingscore
+	testpredict = clf.predict(test)
+	print 'SGD test score ', 1.0*np.sum(testpredict == gold)/len(testpredict)
+print_train_and_test_error()
 
 #idx0 = [i for i in range(len(labels)) if labels[i] == 0]
 
 trainpredict0 = clf.predict(train[:])
 p_trainpredict0 = clf.predict_proba(train[:])
+print "the predicted probabilities start with"
+print p_trainpredict0[:10]
 p = np.max(p_trainpredict0, axis=1)
 plt.hist(p, bins=100)
+
+sys.exit()
 
 idx0 = idx
 cutoff = 0.7 # cutoff certainty
