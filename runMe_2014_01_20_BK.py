@@ -74,7 +74,7 @@ def FIGURE_out_sparse():
 freqs=train.sum(axis=0).flat
 print "Total number of features: ", len(freqs)
 print "Number of 1s: ", sum(1 for i in freqs if i==1)
-print "shape of train:", train.shape
+print "shape of train:", train.shape 
 print "Total Number of all-zero Rows.", sum(train.sum(axis=1)==0)
 plt.hist(freqs, bins=100)
 
