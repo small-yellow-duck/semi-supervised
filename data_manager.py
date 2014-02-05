@@ -13,16 +13,69 @@ import scipy.sparse as sparse
 import random
 import itertools as it
 
+
 class data_manager:
 	def __init__(self,\
 		csr_train_feats,\
 		train_labels___0_means_unlabelled,\
 		csr_test_feats,\
 		test_labels,\
-		has_random_dropout=False,\
-		dropout_rate=None,\
-		num_dropout_corruptions_per_point=None):
-		self.initialize_all_attribute_variables()
+		dropout_rates={0},\
+		max_num_dropout_corruptions_per_point=None):
+		#has_random_dropout=False,\
+		#dropout_rate=None,\
+		#num_dropout_corruptions_per_point=None
+		#self.array_to_kron_with=None #Define Later if has_random_dropout
+		#self.dropout_matrix=None #Define Later if has_random_dropout
+		def initialize_all_attribute_variables():
+			self.bool_verbose=False
+
+			self.csr_train_feats=csr_train_feats
+			self.csr_test_feats=csr_test_feats
+
+			self.dropout_rates=dropout_rates #make sure this contains 0!
+			self.dict_csr_rand_dropout_matrices={dr:None for dr in dropout_rates|{0}} """TODO"""
+			self.dict_csr_rand_and_targetted_dropout_matrices={dr:None for dr in dropout_rates|{0}} #These will start as copies of dict_csr_rand_dropout_matrices, but then certain features will be deleted in a targeted manner
+
+
+			self.train_labels___0_means_unlabelled__minus_1_means_excluded=train_labels___0_means_unlabelled
+			self.set_labels=set(train_labels___0_means_unlabelled)-{}
+			self.test_labels=test_labels
+
+			self.bool_train_labelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded>0)
+			self.bool_train_unlabelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded=0)
+			self.bool_train_excluded=(self.train_labels___0_means_unlabelled__minus_1_means_excluded<0)
+			self.bool_train_labelled_initially=self.bool_train_labelled #This shouldn't change!
+
+			self.bool_feat_included=(np.ones(self.csr_train_feats.shape[1])>0) #Should be all True now
+			self.bool_feat_excluded=~self.bool_feat_included #Should be all False now
+			self.feat_time_left=np.ones(self.csr_train_feats.shape[1])*-1 #Time left until removed
+
+			self.dropout_rates=dropout_rates
+			self.max_num_dropout_corruptions_per_point=max_num_dropout_corruptions_per_point
+		initialize_all_attribute_variables()
+		def initialize_dropout_matrices():
+			self.dict_csr_rand_dropout_matrices[0]=self.csr_train_feats
+			if len(self.dropout_rates)==0: return
+			for dr in self.dropout_rates:
+				def check_dropout():
+					assert dr>0 and dr<1
+					assert isinstance(self.max_num_dropout_corruptions_per_point,int)
+					assert self.max_num_dropout_corruptions_per_point>0
+				check_dropout()
+				self.dict_csr_rand_dropout_matrices[dr]=self.get_kron_matrix(
+					self.csr_train_feats,self.max_num_dropout_corruptions_per_point)
+			row,column=self.dict_csr_rand_dropout_matrices[dr].nonzero()
+			for r,c in it.izip(row,column):
+				rand=random.random()
+				for dr in self.dropout_rates: #the non-zeros of higher drop-out matrices will be non-zeros of less drop-out matrices
+					if rand<dr:
+						self.dict_csr_rand_dropout_matrices[dr][r,c]=0
+			for dr, matrix in self.dict_csr_rand_dropout_matrices.iteritems():
+				matrix.eliminate_zeros()
+				print "for dropout rate",dr,"there are", matrix.getnnz(),"nonzero elements"
+
+		initialize_dropout_matrices()
 		def check_init():
 			assert not any(self.bool_train_excluded)
 			assert all(self.bool_train_labelled^self.bool_train_unlabelled)
@@ -65,38 +118,15 @@ class data_manager:
 			print "After dropout the matrix has", len(row), "non-zero elements"
 		if has_random_dropout: make_corrupted_copies()
 
-	def initialize_all_attribute_variables():
-		self.bool_verbose=False
-
-		self.csr_train_feats=csr_train_feats
-		self.csr_test_feats=csr_test_feats
-
-		self.train_labels___0_means_unlabelled__minus_1_means_excluded=train_labels___0_means_unlabelled
-		self.set_labels=set(train_labels___0_means_unlabelled)-{}
-		self.test_labels=test_labels
-
-		self.bool_train_labelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded>0)
-		self.bool_train_unlabelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded=0)
-		self.bool_train_excluded=(self.train_labels___0_means_unlabelled__minus_1_means_excluded<0)
-		self.bool_train_labelled_initially=self.bool_train_labelled #This shouldn't change!
-
-		self.bool_feat_included=(np.ones(self.csr_train_feats.shape[1])>0) #Should be all True now
-		self.bool_feat_excluded=~self.bool_feat_included #Should be all False now
-		self.feat_time_left=np.ones(self.csr_train_feats.shape[1])*-1 #Time left until removed
-
-		self.has_random_dropout=has_random_dropout
-		self.dropout_rate=dropout_rate
-		self.num_dropout_corruptions_per_point=num_dropout_corruptions_per_point
-		self.array_to_kron_with=None #Define Later if has_random_dropout
-		self.dropout_matrix=None #Define Later if has_random_dropout
-
 	def set_verbose(self,bool_verbose):
 		assert isinstance(bool_verbose,bool)
 		self.bool_verbose=bool_verbose
 
-	def get_kron_matrix(self, matrix):
-		return sparse.kron(self.array_to_kron_with,matrix,'lil')
+	def get_kron_matrix(self, matrix,num_duplicates):
+		array_to_kron_with=np.ones(num_duplicates).reshape(num_duplicates,1) # a vertical ones matrix
+		return sparse.kron(self.array_to_kron_with,matrix,'csr')
 	def get_kron_array(self, array):
+		array_to_kron_with=np.ones(num_duplicates).reshape(num_duplicates,1) # a vertical ones matrix
 		return np.kron(self.array_to_kron_with,array)
 
 """Functions to label unlabelled training data and move it to the labelled data"""
