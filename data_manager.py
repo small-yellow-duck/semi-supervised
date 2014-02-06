@@ -31,11 +31,12 @@ class data_manager:
 			self.bool_verbose=False
 
 			self.csr_train_feats=csr_train_feats
+			self.num_train=csr_train_feats.shape[0]
 			self.csr_test_feats=csr_test_feats
 
 			self.dropout_rates=dropout_rates #make sure this contains 0!
 			self.dict_csr_rand_dropout_matrices={dr:None for dr in dropout_rates|{0}} """TODO"""
-			self.dict_csr_rand_and_targetted_dropout_matrices={dr:None for dr in dropout_rates|{0}} #These will start as copies of dict_csr_rand_dropout_matrices, but then certain features will be deleted in a targeted manner
+			self.dict_csr_rand_and_targetted_dropout_matrices={} #These will start as copies of dict_csr_rand_dropout_matrices, but then certain features will be deleted in a targeted manner
 
 
 			self.train_labels___0_means_unlabelled__minus_1_means_excluded=train_labels___0_means_unlabelled
@@ -74,17 +75,22 @@ class data_manager:
 			for dr, matrix in self.dict_csr_rand_dropout_matrices.iteritems():
 				matrix.eliminate_zeros()
 				print "for dropout rate",dr,"there are", matrix.getnnz(),"nonzero elements"
+			#self.dict_csr_rand_and_targetted_dropout_matrices matrices are only created when needed
 
 		initialize_dropout_matrices()
 		def check_init():
 			assert not any(self.bool_train_excluded)
 			assert all(self.bool_train_labelled^self.bool_train_unlabelled)
-			assert len(self.csr_train_feats)\
+			assert self.csr_train_feats.shape[0]\
 				== len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)\
 				== len(self.bool_train_labelled)\
 				== len(self.bool_train_unlabelled)\
-				== len(self.bool_train_excluded)
-			assert len(self.csr_test_feats)\
+				== len(self.bool_train_excluded)\
+				== self.dict_csr_rand_dropout_matrices[0].shape[0] 
+			nt=self.csr_train_feats.shape[0]
+			for dr in self.dropout_rates:
+				assert nt*self.max_num_dropout_corruptions_per_point==self.dict_csr_rand_dropout_matrices[dr].shape[0]
+			assert self.csr_test_feats.shape[0]\
 				== len(self.test_labels)
 			assert self.csr_train_feats.shape[1]\
 				== self.csr_test_feats.shape[1]\
@@ -97,26 +103,26 @@ class data_manager:
 			assert set(self.test_labels)-{0}<self.set_labels
 		check_init()
 
-		def make_corrupted_copies():
-			def check_dropout():
-				assert dropout_rate>0 and dropout_rate<1
-				assert isinstance(num_dropout_corruptions_per_point,int)
-				assert num_dropout_corruptions_per_point>0
-				assert self.has_random_dropout
-			check_dropout()
+	# 	def make_corrupted_copies():
+		# 	def check_dropout():
+		# 		assert dropout_rate>0 and dropout_rate<1
+		# 		assert isinstance(num_dropout_corruptions_per_point,int)
+		# 		assert num_dropout_corruptions_per_point>0
+		# 		assert self.has_random_dropout
+		# 	check_dropout()
 
-			self.array_to_kron_with=np.ones(num_dropout_corruptions_per_point).reshape(num_dropout_corruptions_per_point,1) # a vertical ones matrix
-			self.dropout_matrix=self.get_kron_matrix(self.matrix)
-			row, col=self.dropout_matrix.nonzero()
-			print "Before dropout the matrix has", len(row), "non-zero elements"
-			assert len(row) = len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)
-			for r, c in it.izip(row,col):
-				if random.random()<dropout_rate:
-					self.dropout_matrix[r,c]=0
-			self.dropout_matrix=sparse.csr_matrix(self.dropout_matrix)
-			row, col=self.dropout_matrix.nonzero()
-			print "After dropout the matrix has", len(row), "non-zero elements"
-		if has_random_dropout: make_corrupted_copies()
+		# 	self.array_to_kron_with=np.ones(num_dropout_corruptions_per_point).reshape(num_dropout_corruptions_per_point,1) # a vertical ones matrix
+		# 	self.dropout_matrix=self.get_kron_matrix(self.matrix)
+		# 	row, col=self.dropout_matrix.nonzero()
+		# 	print "Before dropout the matrix has", len(row), "non-zero elements"
+		# 	assert len(row) = len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)
+		# 	for r, c in it.izip(row,col):
+		# 		if random.random()<dropout_rate:
+		# 			self.dropout_matrix[r,c]=0
+		# 	self.dropout_matrix=sparse.csr_matrix(self.dropout_matrix)
+		# 	row, col=self.dropout_matrix.nonzero()
+		# 	print "After dropout the matrix has", len(row), "non-zero elements"
+		# if has_random_dropout: make_corrupted_copies()
 
 	def set_verbose(self,bool_verbose):
 		assert isinstance(bool_verbose,bool)
@@ -125,7 +131,8 @@ class data_manager:
 	def get_kron_matrix(self, matrix,num_duplicates):
 		array_to_kron_with=np.ones(num_duplicates).reshape(num_duplicates,1) # a vertical ones matrix
 		return sparse.kron(self.array_to_kron_with,matrix,'csr')
-	def get_kron_array(self, array):
+
+	def get_kron_array(self, array,num_duplicates):
 		array_to_kron_with=np.ones(num_duplicates).reshape(num_duplicates,1) # a vertical ones matrix
 		return np.kron(self.array_to_kron_with,array)
 
@@ -182,48 +189,41 @@ class data_manager:
 		self.label_top_n(N,classifier,labels_to_forget)
 
 """Functions for accessing the data"""
-	def get_feats_for_semi_supervised(self,percent_dropout,num_dropout_corruptions_per_point):
-		"""Get feature arrays for semi-supervised learning and for calculating performance on test_labels
-		set using the same classifier (which is probably not the best classifier for using on the test set)"""
-
-		"""Select the corrupted data if applicable, and otherwise the original training data"""
-		((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels))\
-			=self.get_feats_only_random_dropout()
-
-		 """Select only those features that are still used for semi-supervised"""
-		test_feats=test_feats[:,self.bool_feat_included]
-		train_feats_labelled=train_feats_labelled[:,self.bool_feat_included]
-		train_feats_unlabelled=train_feats_unlabelled[:,self.bool_feat_included]
-
-		return ((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels)) """TODO UPDATE"""
-	def get_feats_no_dropout(self):
-		train_feats_labelled=self.csr_train_feats[self.bool_train_labelled]
-		train_labels=self.train_labels[self.bool_train_labelled]
-		train_feats_unlabelled=self.csr_train_feats[self.bool_train_unlabelled]
-		test_feats=self.test_feats
-		test_labels=self.test_labels
-		return ((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels))
-	def get_feats_only_random_dropout(self):		
-		"""Get feature arrays for semi-supervised learning and for calculating performance on test_labels
-		set using the same classifier (which is probably not the best classifier for using on the test set)"""
-
-		"""Select the corrupted data if applicable, and otherwise the original training data"""
-		if self.has_random_dropout:
-			train_feats_dropout=self.dropout_matrix
-			train_labels_dropout=self.get_kron_array(self.train_labels___0_means_unlabelled__minus_1_means_excluded)
-			bool_train_labelled_dropout=self.get_kron_array(self.bool_train_labelled)
-			
-			train_feats_labelled=train_feats_dropout[bool_train_labelled_dropout]
-			train_labels=train_labels_dropout[bool_train_labelled_dropout]
+	def __get_data__(self,percent_dropout,num_dropout_corruptions_per_point,bool_targetted_dropout):
+		if percent_dropout==0:
+			assert num_dropout_corruptions_per_point==1
 		else:
-			train_feats_labelled=self.csr_train_feats[self.bool_train_labelled]
-			train_labels=self.train_labels[self.bool_train_labelled]
+			assert percent_dropout in self.dropout_rates
+			assert 1<=num_dropout_corruptions_per_point<=self.max_num_dropout_corruptions_per_point
+		assert len(self.dict_csr_rand_and_targetted_dropout_matrices)<=1 #Can remove - right now I just don't see why we would have more than one defined at a time!
+		if bool_targetted_dropout and percent_dropout in self.dict_csr_rand_and_targetted_dropout_matrices:
+			matrix=self.dict_csr_rand_and_targetted_dropout_matrices[percent_dropout]
+		else
+			matrix=self.dict_csr_rand_dropout_matrices[percent_dropout]
+		matrix=matrix[:self.num_train*num_dropout_corruptions_per_point]
+		labels=self.get_kron_array(self.train_labels___0_means_unlabelled__minus_1_means_excluded, num_dropout_corruptions_per_point)
+		labelled=self.get_kron_array(self.bool_train_labelled,num_dropout_corruptions_per_point)
+		tr_X=matrix[labelled]
+		tr_Y=labels[labelled]
+		tr_XU=self.csr_train_feats[self.bool_train_unlabelled] #No dropout for the unlabelled data!
+		te_X=self.csr_test_feats
+		te_Y=self.test_labels
+		return ((tr_X,tr_Y),tr_XU,(te_X,te_Y))
 
-		train_feats_unlabelled=self.csr_train_feats[self.bool_train_unlabelled] #No dropout for the unlabelled data!
-		test_feats=self.test_feats
-		test_labels=self.test_labels
+	def get_data_for_semi_supervised(self,percent_dropout,num_dropout_corruptions_per_point):
+		"""Get feature arrays for semi-supervised learning and for calculating performance on test_labels
+		set using the same classifier (which is probably not the best classifier for using on the test set)"""
 
-		return ((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels))
+		"""Select the corrupted data if applicable, and otherwise the original training data"""
+		return __get_data__(self,percent_dropout,num_dropout_corruptions_per_point,bool_targetted_dropout=True)
+	def get_data_no_dropout(self):
+		return __get_data__(self,percent_dropout=0,num_dropout_corruptions_per_point=1,bool_targetted_dropout=False)
+	def get_data_only_random_dropout(self,percent_dropout,num_dropout_corruptions_per_point):		
+		"""Get feature arrays for semi-supervised learning and for calculating performance on test_labels
+		set using the same classifier (which is probably not the best classifier for using on the test set)"""
+
+		"""Select the corrupted data if applicable, and otherwise the original training data"""
+		return __get_data__(self,percent_dropout,num_dropout_corruptions_per_point,bool_targetted_dropout=False)
 
 """Functions for removing features"""
 	def get_feat_counts(self):
