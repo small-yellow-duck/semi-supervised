@@ -14,6 +14,9 @@ import random
 import itertools as it
 
 
+
+
+
 class data_manager:
 	def __init__(self,\
 		csr_train_feats,\
@@ -22,11 +25,7 @@ class data_manager:
 		test_labels,\
 		dropout_rates={0},\
 		max_num_dropout_corruptions_per_point=None):
-		#has_random_dropout=False,\
-		#dropout_rate=None,\
-		#num_dropout_corruptions_per_point=None
-		#self.array_to_kron_with=None #Define Later if has_random_dropout
-		#self.dropout_matrix=None #Define Later if has_random_dropout
+
 		def initialize_all_attribute_variables():
 			self.bool_verbose=False
 
@@ -40,7 +39,7 @@ class data_manager:
 
 
 			self.train_labels___0_means_unlabelled__minus_1_means_excluded=train_labels___0_means_unlabelled
-			self.set_labels=set(train_labels___0_means_unlabelled)-{}
+			self.set_labels=set(train_labels___0_means_unlabelled)-{0}
 			self.test_labels=test_labels
 
 			self.bool_train_labelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded>0)
@@ -76,30 +75,18 @@ class data_manager:
 				matrix.eliminate_zeros()
 				print "for dropout rate",dr,"there are", matrix.getnnz(),"nonzero elements"
 			#self.dict_csr_rand_and_targetted_dropout_matrices matrices are only created when needed
-
 		initialize_dropout_matrices()
 		def check_init():
+			self.run_checks()
 			assert not any(self.bool_train_excluded)
 			assert all(self.bool_train_labelled^self.bool_train_unlabelled)
 			assert self.csr_train_feats.shape[0]\
-				== len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)\
-				== len(self.bool_train_labelled)\
-				== len(self.bool_train_unlabelled)\
-				== len(self.bool_train_excluded)\
 				== self.dict_csr_rand_dropout_matrices[0].shape[0] 
 			nt=self.csr_train_feats.shape[0]
 			for dr in self.dropout_rates:
-				assert nt*self.max_num_dropout_corruptions_per_point==self.dict_csr_rand_dropout_matrices[dr].shape[0]
-			assert self.csr_test_feats.shape[0]\
-				== len(self.test_labels)
-			assert self.csr_train_feats.shape[1]\
-				== self.csr_test_feats.shape[1]\
-				== len(self.bool_feat_included)\
-				== len(self.bool_feat_excluded)\
-				== len(self.feat_time_left)
+				assert dr in self.dict_csr_rand_dropout_matrices
 			assert all(self.bool_feat_included)
 			assert not any(self.bool_feat_excluded)
-			assert isinstance(self.has_random_dropout,bool)
 			assert set(self.test_labels)-{0}<self.set_labels
 		check_init()
 
@@ -200,6 +187,8 @@ class data_manager:
 			matrix=self.dict_csr_rand_and_targetted_dropout_matrices[percent_dropout]
 		else
 			matrix=self.dict_csr_rand_dropout_matrices[percent_dropout]
+		if bool_targetted_dropout and percent_dropout not in self.dict_csr_rand_and_targetted_dropout_matrices:
+			print "Warning: Want to get matrix with targeted feature dropout, but this matrix does not exist.  Returning a matrix with only random dropout at most."
 		matrix=matrix[:self.num_train*num_dropout_corruptions_per_point]
 		labels=self.get_kron_array(self.train_labels___0_means_unlabelled__minus_1_means_excluded, num_dropout_corruptions_per_point)
 		labelled=self.get_kron_array(self.bool_train_labelled,num_dropout_corruptions_per_point)
@@ -230,7 +219,7 @@ class data_manager:
 		num_unlabelled=self.csr_train_feats[self.bool_train_unlabelled].sum(axis=0)
 		num_labelled=self.csr_train_feats[self.bool_train_labelled].sum(axis=0)
 		return num_unlabelled, num_labelled
-	def give_notice(self,imbalance_threshold, notice):
+	def give_notice(self,imbalance_threshold, notice=None):
 		"""For each feature, 
 			Let 
 				Fl = the fraction of examples in the labelled training
@@ -253,15 +242,15 @@ class data_manager:
 		assert isinstance(notice,int)
 		assert notice>=0
 
-		train_unlabelled_feats, train_labelled_feats=self.get_feat_counts()
+		train_unlabelled_feat_counts, train_labelled_feat_counts=self.get_feat_counts()
 
 		"""Remove features not present in the unlabelled training data immediately"""
-		bool_feats_to_remove=(train_unlabelled_feats==0)&self.bool_feat_included&(self.feat_time_left==-1)
+		bool_feats_to_remove=(train_unlabelled_feat_counts==0)&self.bool_feat_included&(self.feat_time_left==-1)
 		self.remove_feats(bool_feats_to_remove)
 
 		"""Give features present but rare in the unlabelled training data notice of removal in the near future"""
-		bool_feats_to_give_notice=train_labelled_feats/len(train_labelled_feats)>\
-							train_unlabelled_feats/len(train_unlabelled_feats)*imbalance_threshold
+		bool_feats_to_give_notice=train_labelled_feat_counts/len(train_labelled_feat_counts)>\
+							train_unlabelled_feat_counts/len(train_unlabelled_feat_counts)*imbalance_threshold
 		bool_feats_to_give_notice=bool_feats_to_give_notice&self.bool_feat_included&(self.feat_time_left==-1)
 		
 		if notice==0:
@@ -280,10 +269,28 @@ class data_manager:
 		self.feat_time_left[self.feat_time_left>0]-=1
 		bool_feats_to_remove=(self.feat_time_left==0)
 		self.remove_feats(bool_feats_to_remove)
-	def remove_feats(self,bool_indices):		
+	def remove_feats(self,bool_indices,dropout_rate):		
 		"""Removes feats specified by the given boolean indices
 
 		all unlabelled training examples containing removed feats are also removed"""
+		num_to_remove=bool_feats_to_remove.sum()
+		if num_to_remove<=0:
+			return
+		"""Create a new targeted dropout matrix if needed"""
+		if dropout_rate not in self.dict_csr_rand_and_targetted_dropout_matrices:
+			assert len(self.dict_csr_rand_and_targetted_dropout_matrices)==0
+			assert dropout_rate in self.dict_csr_rand_dropout_matrices
+			self.dict_csr_rand_and_targetted_dropout_matrices[dropout_rate]=self.dict_csr_rand_dropout_matrices[dropout_rate].copy()
+		"""Set values for features that have been removed to 0"""
+		ind=[i for i in xrange(len(bool_feats_to_remove)) if bool_feats_to_remove[i]==True]
+		assert len(ind)==num_to_remove
+		for i in ind:
+			rows,zeros=self.dict_csr_rand_and_targetted_dropout_matrices[dropout_rate][:,i].nonzero()
+			for r in rows:
+				assert self.dict_csr_rand_and_targetted_dropout_matrices[dropout_rate][r,i]==1
+				self.dict_csr_rand_and_targetted_dropout_matrices[dropout_rate][r,i]=0
+			assert sum(self.dict_csr_rand_and_targetted_dropout_matrices[dropout_rate][:,i])==0
+
 		self.feat_time_left[bool_feats_to_remove]=-2
 		assert not any(self.bool_feat_excluded[bool_feats_to_remove])
 		assert all(self.bool_feat_included[bool_feats_to_remove])
@@ -301,7 +308,7 @@ class data_manager:
 
 		if self.bool_verbose:
 			print '-'*10,'decrement_notice','-'*10
-			print "FEATS: Removed ", bool_feats_to_remove.sum(), ".",\
+			print "FEATS: Removed ", num_to_remove, ".",\
 				 self.bool_feat_included.sum(),	"used, and",\
 				 self.bool_feat_excluded.sum(),"excluded, including ",\
 				(self.feat_time_left>0).sum(),"given notice."
@@ -322,6 +329,16 @@ class data_manager:
 					len(self.bool_train_unlabelled)==\
 					len(self.bool_train_excluded)==\
 					len(self.bool_train_labelled_initially)
+			nt=self.csr_train_feats.shape[0]
+			def check_dims_in_dict(m_dict):
+				for dr in m_dict:
+					if dr == 0:
+						assert nt==m_dict[dr].shape[0]
+					else:
+						assert nt*self.max_num_dropout_corruptions_per_point==m_dict[dr].shape[0]
+			check_dims_in_dict(self.dict_csr_rand_dropout_matrices)
+			check_dims_in_dict(self.dict_csr_rand_and_targetted_dropout_matrices)
+			assert len(self.dict_csr_rand_and_targetted_dropout_matrices)<=1
 			assert self.csr_train_feats.shape[1]==\
 					self.csr_test_feats.shape[1]==\
 					len(self.bool_feat_included)==\
@@ -331,26 +348,24 @@ class data_manager:
 					len(self.test_labels)
 		if True: """Check boolean arrays (mostly for Mutual Exclusivity)"""
 			assert all(self.bool_train_labelled^self.bool_train_unlabelled^self.bool_train_excluded)
-			assert 
-
-		assert not any(self.bool_train_excluded)
-		assert all(self.bool_train_labelled^self.bool_train_unlabelled)
-		assert len(self.csr_train_feats)\
-			== len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)\
-			== len(self.bool_train_labelled)\
-			== len(self.bool_train_unlabelled)\
-			== len(self.bool_train_excluded)
-		assert len(self.csr_test_feats)\
-			== len(self.test_labels)
-		assert self.csr_train_feats.shape[1]\
-			== self.csr_test_feats.shape[1]\
-			== len(self.bool_feat_included)\
-			== len(self.bool_feat_excluded)\
-			== len(self.feat_time_left)
-		assert all(self.bool_feat_included)
-		assert not any(self.bool_feat_excluded)
-		assert isinstance(self.has_random_dropout,bool)
-		assert set(self.test_labels)-{0}<self.set_labels
+			assert not any(self.bool_train_excluded)
+			assert all(self.bool_train_labelled^self.bool_train_unlabelled)
+			assert len(self.csr_train_feats)\
+				== len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)\
+				== len(self.bool_train_labelled)\
+				== len(self.bool_train_unlabelled)\
+				== len(self.bool_train_excluded)
+			assert len(self.csr_test_feats)\
+				== len(self.test_labels)
+			assert self.csr_train_feats.shape[1]\
+				== self.csr_test_feats.shape[1]\
+				== len(self.bool_feat_included)\
+				== len(self.bool_feat_excluded)\
+				== len(self.feat_time_left)
+			assert all(self.bool_feat_included)
+			assert not any(self.bool_feat_excluded)
+			assert isinstance(self.has_random_dropout,bool)
+			assert set(self.test_labels)-{0}<self.set_labels
 	def get_fraction_labelled(): "TODO"
 		pass
 	def get_num_points_labelled(): "TODO - return dict with keys orig, new, tot"
@@ -419,7 +434,18 @@ if __name__ == "__main__":
 	"""MAKE SOME CODE TO TEST THIS CLASS HERE!"""
 
 
-
+def create_synthetic_data(num_labels,num_train,num_feats,frac_labelled,num_test):
+	feat_probs=np.random.rand(num_labels,num_feats)**2*np.random.rand(num_feats)**2
+	assert 0<frac_labelled<1
+	def create_data(num_points):
+		labels=np.random.randint(1,num_labels+1,num_points)
+		assert len(np.unique(labels))==num_labels
+		feats=(np.random.rand(num_points,num_feats)<feat_probs[labels])*1
+		return feats,labels
+	train_X,train_Y=create_data(num_train)
+	test_X,test_Y=create_data(num_test)
+	train_Y*=np.random.rand(num_train)<frac_labelled
+	return ((train_X,train_Y),(test_X,test_Y))
 
 
 
