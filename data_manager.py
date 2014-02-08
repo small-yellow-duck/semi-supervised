@@ -34,18 +34,19 @@ class data_manager:
 			self.csr_test_feats=csr_test_feats
 
 			self.dropout_rates=dropout_rates #make sure this contains 0!
-			self.dict_csr_rand_dropout_matrices={dr:None for dr in dropout_rates|{0}} """TODO"""
+			self.dict_csr_rand_dropout_matrices={dr:None for dr in dropout_rates|{0}} #"""TODO"""
 			self.dict_csr_rand_and_targetted_dropout_matrices={} #These will start as copies of dict_csr_rand_dropout_matrices, but then certain features will be deleted in a targeted manner
 
 
 			self.train_labels___0_means_unlabelled__minus_1_means_excluded=train_labels___0_means_unlabelled
+			self.orig_labels=train_labels___0_means_unlabelled.copy() #This shouldn't change.
 			self.set_labels=set(train_labels___0_means_unlabelled)-{0}
 			self.test_labels=test_labels
 
 			self.bool_train_labelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded>0)
-			self.bool_train_unlabelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded=0)
+			self.bool_train_unlabelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded==0)
 			self.bool_train_excluded=(self.train_labels___0_means_unlabelled__minus_1_means_excluded<0)
-			self.bool_train_labelled_initially=self.bool_train_labelled #This shouldn't change!
+			self.bool_train_labelled_initially=self.bool_train_labelled.copy() #This shouldn't change!
 
 			self.bool_feat_included=(np.ones(self.csr_train_feats.shape[1])>0) #Should be all True now
 			self.bool_feat_excluded=~self.bool_feat_included #Should be all False now
@@ -123,8 +124,8 @@ class data_manager:
 		array_to_kron_with=np.ones(num_duplicates).reshape(num_duplicates,1) # a vertical ones matrix
 		return np.kron(self.array_to_kron_with,array)
 
-"""Functions to label unlabelled training data and move it to the labelled data"""
-	def forget_labels(labels_to_forget="none"): """TODO"""
+	"""Functions to label unlabelled training data and move it to the labelled data"""
+	def forget_labels(labels_to_forget="none"):
 		"""labels_to_forget = a string specifying which (if any) labels to forget prior to labelling some unlabelled 
 							training data.  Forgetting allows the semi-supervised algorithm to "change it's mind".
 							To make progress, be sure to label more unlabelled data than you are forgetting!
@@ -133,6 +134,24 @@ class data_manager:
 			"originally unlabelled" - Forget all labels that weren't given to the data manager's constructor
 			"all" - Forget all labels, so you could even change your mind about the initially labelled examples
 		"""
+		# 	self.train_labels___0_means_unlabelled__minus_1_means_excluded=train_labels___0_means_unlabelled
+		# 	self.bool_train_labelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded>0)
+		# 	self.bool_train_unlabelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded==0)
+		# 	self.bool_train_excluded=(self.train_labels___0_means_unlabelled__minus_1_means_excluded<0)
+		# 	self.bool_train_labelled_initially=self.bool_train_labelled.copy() #This shouldn't change!
+		# 	self.orig_labels=train_labels___0_means_unlabelled.copy() #This shouldn't change.
+		assert labels_to_forget in {"none","originally unlabelled","all"}
+		if labels_to_forget != "none":
+			if labels_to_forget == "originally unlabelled":
+				self.train_labels___0_means_unlabelled__minus_1_means_excluded=self.orig_labels.copy()
+			elif labels_to_forget == "all":
+				self.train_labels___0_means_unlabelled__minus_1_means_excluded=np.zeros(self.num_train)
+			else:
+				sys.exit(1)
+			self.bool_train_labelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded>0)
+			self.bool_train_unlabelled=(self.train_labels___0_means_unlabelled__minus_1_means_excluded==0)
+			self.bool_train_excluded=(self.train_labels___0_means_unlabelled__minus_1_means_excluded<0)
+
 	def label_top_n(self,n,classifier,labels_to_forget="none"):
 		"""labels some unlabelled training data
 
@@ -430,7 +449,8 @@ class data_manager:
 		"""Make this ready to start another semi-supervised learning trial"""
 
 if __name__ == "__main__":
-	pass 
+	np.set_printoptions(precision=4, suppress=True)
+	create_synthetic_data(num_labels=3,num_train=20,num_feats=10,frac_labelled=.6,num_test=8)
 	"""MAKE SOME CODE TO TEST THIS CLASS HERE!"""
 
 
@@ -445,6 +465,9 @@ def create_synthetic_data(num_labels,num_train,num_feats,frac_labelled,num_test)
 	train_X,train_Y=create_data(num_train)
 	test_X,test_Y=create_data(num_test)
 	train_Y*=np.random.rand(num_train)<frac_labelled
+	print "train labels | features"
+	print np.column_stack(train_Y,np.ones(num_train),train_X)
+	print np.column_stack(test_Y,np.ones(num_test),test_X)	
 	return ((train_X,train_Y),(test_X,test_Y))
 
 
