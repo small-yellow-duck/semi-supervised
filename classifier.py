@@ -8,9 +8,11 @@ import math
 import misc
 import numpy as np
 import itertools as it
-import system as sys
+#import sys
 import sklearn as skl
-from skl import linear_model
+from sklearn import linear_model
+
+classes_to_test={'averaged_perceptron_classifier'}
 
 class classifier:
 	def __init__(self):
@@ -44,17 +46,19 @@ class classifier:
 		pass
 
 	def __str__(self):
+		pass
 		#print something useful out!
 
-class averaged_perceptron_classifier():
+class averaged_perceptron_classifier(classifier):
 	def __init__(self,sample_frequency_for_averaging,n_iter):
 		self.sf=sample_frequency_for_averaging #The number of points to train on between samples used for the averaged perceptron
 		self.n_iter=n_iter #The number of passes through the data before the next update
 		self.percep=None #set later
-		self.averaged_perceptron
+		self.averaged_perceptron=None
 		self.reset_perceptron()
 	def reset_perceptron(self):
 		self.percep=linear_model.Perceptron(n_iter=1,warm_start=True)
+		self.averaged_perceptron=None
 	def train(self,X,Y, warm_start=True):
 		"""This will train the classifier"""
 		assert X.shape[0]==len(Y)
@@ -66,6 +70,7 @@ class averaged_perceptron_classifier():
 			self.percep.fit(X,Y)
 			samples.append(self.percep.get_params())
 		self.averaged_perceptron=sum(samples)/len(samples)
+
 
 	def predict_label_weights_and_confidence(self,X):
 		sys.exit(1) #This should be implemented in the subclass
@@ -81,4 +86,14 @@ class averaged_perceptron_classifier():
 		pass
 
 	def __str__(self):
+		pass
 		#print something useful out!
+
+if __name__=="__main__" and 'averaged_perceptron_classifier' in classes_to_test:
+	(train_X,train_Y),(test_X,test_Y)=data_manager.create_synthetic_data(num_labels=4,\
+									num_train=20,\
+									num_feats=10,\
+									frac_labelled=.3,\
+									num_test=5)
+	print (train_X,train_Y),(test_X,test_Y)
+

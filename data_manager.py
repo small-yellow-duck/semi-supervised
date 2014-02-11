@@ -182,7 +182,7 @@ class data_manager:
 		if isinstance(n,int):
 			label_top_k(n,labels,confidences)
 		elif isinstance(n,dict):
-			assert n.keys()=self.set_labels
+			assert n.keys()==self.set_labels
 			for label, k in n.iteritems():
 				conf_of_label=confidences*(labels==label)
 				assert set(labels[conf_of_label!=0])=={label}
@@ -194,7 +194,7 @@ class data_manager:
 		N={l:n for l in self.set_labels}
 		self.label_top_n(N,classifier,labels_to_forget)
 
-"""Functions for accessing the data"""
+	"""Functions for accessing the data"""
 	def __get_data__(self,percent_dropout,num_dropout_corruptions_per_point,bool_targetted_dropout):
 		if percent_dropout==0:
 			assert num_dropout_corruptions_per_point==1
@@ -204,7 +204,7 @@ class data_manager:
 		assert len(self.dict_csr_rand_and_targetted_dropout_matrices)<=1 #Can remove - right now I just don't see why we would have more than one defined at a time!
 		if bool_targetted_dropout and percent_dropout in self.dict_csr_rand_and_targetted_dropout_matrices:
 			matrix=self.dict_csr_rand_and_targetted_dropout_matrices[percent_dropout]
-		else
+		else:
 			matrix=self.dict_csr_rand_dropout_matrices[percent_dropout]
 		if bool_targetted_dropout and percent_dropout not in self.dict_csr_rand_and_targetted_dropout_matrices:
 			print "Warning: Want to get matrix with targeted feature dropout, but this matrix does not exist.  Returning a matrix with only random dropout at most."
@@ -233,7 +233,7 @@ class data_manager:
 		"""Select the corrupted data if applicable, and otherwise the original training data"""
 		return __get_data__(self,percent_dropout,num_dropout_corruptions_per_point,bool_targetted_dropout=False)
 
-"""Functions for removing features"""
+	"""Functions for removing features"""
 	def get_feat_counts(self):
 		num_unlabelled=self.csr_train_feats[self.bool_train_unlabelled].sum(axis=0)
 		num_labelled=self.csr_train_feats[self.bool_train_labelled].sum(axis=0)
@@ -280,7 +280,7 @@ class data_manager:
 		if self.bool_verbose:
 			print '-'*10,'give_notice','-'*10
 			print "NOTICE:",notice,"given to",len(bool_feats_to_give_notice),"new feats.",\
-				"Tot",(self.feat_time_left>0).sum(),"feats on notice,",self.bool_feat_excluded.sum(),
+				"Tot",(self.feat_time_left>0).sum(),"feats on notice,",self.bool_feat_excluded.sum(),\
 				"feats removed, and", self.bool_feat_included.sum(),"feats included."
 	def decrement_notice(self):
 		"""decrements self.feat_time_left and removes feats whose time has run out."""
@@ -336,18 +336,17 @@ class data_manager:
 				self.bool_train_unlabelled.sum(), "feats unlabelled",\
 				self.bool_train_excluded.sum(), "feats excluded"
 
-"""Misc Functions"""
-	def run_checks(): "TODO - Run a whole bunch of checks"
-		
-		
-		
-		if True: """Check Dimensions"""
+	"""Misc Functions"""
+	def run_checks(): 
+		"Run a whole bunch of checks"
+		Check_Dimensions=True
+		if Check_Dimensions:
 			assert self.csr_train_feats.shape[0]==\
-					len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)==\
-					len(self.bool_train_labelled)==\
-					len(self.bool_train_unlabelled)==\
-					len(self.bool_train_excluded)==\
-					len(self.bool_train_labelled_initially)
+				len(self.train_labels___0_means_unlabelled__minus_1_means_excluded)==\
+				len(self.bool_train_labelled)==\
+				len(self.bool_train_unlabelled)==\
+				len(self.bool_train_excluded)==\
+				len(self.bool_train_labelled_initially)
 			nt=self.csr_train_feats.shape[0]
 			def check_dims_in_dict(m_dict):
 				for dr in m_dict:
@@ -365,7 +364,8 @@ class data_manager:
 					len(self.feat_time_left)
 			assert self.csr_test_feats.shape[0]==\
 					len(self.test_labels)
-		if True: """Check boolean arrays (mostly for Mutual Exclusivity)"""
+		Check_boolean_arrays_mostly_for_Mutual_Exclusivity = True	
+		if Check_boolean_arrays_mostly_for_Mutual_Exclusivity: 
 			assert all(self.bool_train_labelled^self.bool_train_unlabelled^self.bool_train_excluded)
 			assert not any(self.bool_train_excluded)
 			assert all(self.bool_train_labelled^self.bool_train_unlabelled)
@@ -385,9 +385,11 @@ class data_manager:
 			assert not any(self.bool_feat_excluded)
 			assert isinstance(self.has_random_dropout,bool)
 			assert set(self.test_labels)-{0}<self.set_labels
-	def get_fraction_labelled(): "TODO"
+	"TODO"
+	def get_fraction_labelled(): 
 		pass
-	def get_num_points_labelled(): "TODO - return dict with keys orig, new, tot"
+	"TODO - return dict with keys orig, new, tot"
+	def get_num_points_labelled(): 
 		return num_labelled_orig,num_labelled_new,num_labelled_tot
 	def get_num_train(): "TODO - return dict with keys orig, new, tot"
 		return num_train
@@ -452,24 +454,6 @@ if __name__ == "__main__":
 	np.set_printoptions(precision=4, suppress=True)
 	create_synthetic_data(num_labels=3,num_train=20,num_feats=10,frac_labelled=.6,num_test=8)
 	"""MAKE SOME CODE TO TEST THIS CLASS HERE!"""
-
-
-def create_synthetic_data(num_labels,num_train,num_feats,frac_labelled,num_test):
-	feat_probs=np.random.rand(num_labels,num_feats)**2*np.random.rand(num_feats)**2
-	assert 0<frac_labelled<1
-	def create_data(num_points):
-		labels=np.random.randint(1,num_labels+1,num_points)
-		assert len(np.unique(labels))==num_labels
-		feats=(np.random.rand(num_points,num_feats)<feat_probs[labels])*1
-		return feats,labels
-	train_X,train_Y=create_data(num_train)
-	test_X,test_Y=create_data(num_test)
-	train_Y*=np.random.rand(num_train)<frac_labelled
-	print "train labels | features"
-	print np.column_stack(train_Y,np.ones(num_train),train_X)
-	print np.column_stack(test_Y,np.ones(num_test),test_X)	
-	return ((train_X,train_Y),(test_X,test_Y))
-
 
 
 
