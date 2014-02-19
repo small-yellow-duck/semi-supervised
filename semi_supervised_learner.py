@@ -7,11 +7,13 @@ classifier instance and the data_manager class"""
 """
 """TODO LATER
 -Add in forgetting
+-Add in using different classifiers (with different levels of dropout) on the test set
 """
 class semi_supervised_learner:
 
 	def __init__(self,data_manager,classifier,\
 				notice_for_feature_removal=None,\
+				imbalance_ratio_to_trigger_notice=10,\
 				num_to_add_each_iteration=1000,\ 
 				max_labelled_frac=.9,\ 
 				random_drop_out_rate=0,\
@@ -20,6 +22,7 @@ class semi_supervised_learner:
 		self.data_manager=data_manager
 		self.classifier=classifier
 		self.notice_for_feature_removal=notice_for_feature_removal
+		self.imbalance_ratio_to_trigger_notice=imbalance_ratio_to_trigger_notice
 		self.num_to_add_each_iteration=num_to_add_each_iteration #if this is a dictionary it will be interpreted as the number of each class
 		self.max_labelled_frac=max_labelled_frac
 		self.random_drop_out_rate=random_drop_out_rate
@@ -47,10 +50,8 @@ class semi_supervised_learner:
 		error=(1/n)*sum(labels_pred[d]!=list_of_labels[d] for d in range(n))
 		return error
 
-
-
 	def do_semi_supervised_learning(self):
-		assert self.results[num_labelled]==[]
+		assert self.results[num_labelled]==[] #Each semi-supervised learner is intended to be use only once
 		dm=self.data_manager
 		dm.reset_to_initial_condition()
 
@@ -79,6 +80,9 @@ class semi_supervised_learner:
 				self.results['num_of_each_type'].append(lab_counts)
 				self.results['labels'].append(train_labels.copy())
 			record_results()
-			self.label_top_n(self.num_to_add_each_iteration,self.classifier,self.str_labels_to_forget)
+			dm.label_top_n(self.num_to_add_each_iteration,self.classifier,self.str_labels_to_forget)
 
+			#Remove features that no longer help with generalization
+			dm.decrement_notice()
+			dm.give_notice(self.imbalance_ratio_to_trigger_notice, self.notice_for_feature_removal)
 		return self.results_points_N_test_error, self.results_epochs_points_N_test_error
