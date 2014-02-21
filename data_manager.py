@@ -194,14 +194,14 @@ class data_manager:
 					"originally unlabelled" - Forget all labels that weren't given to the data manager's constructor
 					"all" - Forget all labels, so you could even change your mind about the initially labelled examples
 				"""
-			print "Going to predict confidences"
+			print "  Pred confs:",
 			labels = np.ones(self.csr_train_feats.shape[0],int)*-100
 			confidences = np.ones(self.csr_train_feats.shape[0],int)*-100
 			labels[self.bool_train_unlabelled],confidences[self.bool_train_unlabelled]\
 				=classifier.predict_labels_and_confidences(self.csr_train_feats[self.bool_train_unlabelled])
 			# print "dtykj labels", labels
 			# print "asfd confidences", confidences
-			print "Going to sort and label some of them"
+			print "  Sort & label:",
 			confidences[self.bool_train_labelled]=-1 #So we don't try to re-label these!
 			def label_top_k(k,labels,confidences):
 				bool_indices_to_label=confidences.argsort()[-k:]

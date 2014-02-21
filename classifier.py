@@ -58,6 +58,10 @@ class classifier:
 		sys.exit(1) #This should be implemented in the subclass
 		#print something useful out!
 
+	def short_description(self):
+		print "This should be implemented in the subclass!"
+		assert False
+
 class averaged_perceptron_classifier(classifier): 
 	def __init__(self,n_iter,sample_frequency_for_averaging,verbosity=5):
 		"""TODO - TODO - allow this to do averaging or not"""
@@ -249,7 +253,8 @@ class perceptron_classifier(classifier):
 			"\n,  percep values =\n"+str(self.percep.coef_)
 		return my_str
 
-		#print something useful out!
+	def short_description(self):
+		return "per"+str(self.n_iter)
 
 if __name__=="__main__" and 'perceptron_classifier' in classes_to_test:
 	
