@@ -4,6 +4,7 @@ import misc
 import Yarowsky
 import sys
 import pickle
+import semi_supervised_learner
 
 import numpy as np
 import data_manager
@@ -19,15 +20,18 @@ LOAD_DATA=True
 LOAD_DATA_MIN_FEATURE_COUNT=3 #in 1,2,3,5,7,10
 PICKLE_DATA=not LOAD_DATA
 USE_SYNTHETIC_DATA=False
+DATA_FRACTION_TO_USE=1 #This should usually be set to 1, unless you want to run it quick to get preliminary results.
 if USE_SYNTHETIC_DATA:
 	NUM_BETWEEN_SAMPLES=10
 else:
 	NUM_BETWEEN_SAMPLES=1000
 TEST_DATA_MANAGER=False
-PICKLE_DATA_MANAGER=False
-DO_SEMI_SUPERVISED_LEARNING=False
+DO_SEMI_SUPERVISED_LEARNING=True
+SEMI_SUPERVISED_RUNTYPES={"perceptron_drs"}
+#SEMI_SUPERVISED_RUNTYPES={"perceptron_classifier","averaged_perceptron_classifier"}
 DO_BASIC_CLASSIFICATION=not DO_SEMI_SUPERVISED_LEARNING
 LEARNERS_TO_USE={"Perceptron","perceptron_classifier","averaged_perceptron_classifier","LogisticRegression"}
+#DROPOUT_RATES
 #LEARNERS_TO_USE={"averaged_perceptron_classifier"}
 
 if PICKLE_DATA:
@@ -89,7 +93,7 @@ if LOAD_DATA:
 		print 'USE_SYNTHETIC_DATA'
 		(X_train,Y_train),(X_test,Y_test)=\
 			misc.create_synthetic_data(	num_labels=3,\
-										num_train=10,\
+										num_train=20,\
 										num_feats=11,\
 										frac_labelled=.7,\
 										num_test=5,\
@@ -117,71 +121,55 @@ if LOAD_DATA:
 		print "Y train.shape", Y_train.shape
 		print "Y test.shape", Y_test.shape
 
+if DATA_FRACTION_TO_USE != 1:
+	n=len(Y_train)
+	nf=int(n*DATA_FRACTION_TO_USE)
+	perm=np.random.permutation(n)
+	X_train=X_train[perm[:nf]]
+	Y_train=Y_train[perm[:nf]]
+	#At the moment we are not taking a subset of the Y data
+
 if TEST_DATA_MANAGER:
 	print '*'*50
 	print 'TEST_DATA_MANAGER'
-	drs={.05,.1,.2}
+	drs=[.1,.3,.5,.7,.9]
 	dm=data_manager.data_manager(	csr_train_feats=X_train,\
 									train_labels___0_means_unlabelled=Y_train,\
 									csr_test_feats=X_test,\
 									test_labels=Y_test,\
 									#dropout_rates=set(),\
-									dropout_rates=drs,\
-									max_num_dropout_corruptions_per_point=2\
+									dropout_rates=set(drs),\
+									max_num_dropout_corruptions_per_point=3\
 								)
 	print 1
 	def print_data(dr):
 		print "DROPOUT RATE",dr
 		print "len(tr_X.nonzero()[0])", len(tr_X.nonzero()[0])
-		print "len(te_X.nonzero()[0])", len(te_X.nonzero()[0])
-		print "Train - Labelled"
-		misc.print_labels_1_feats(tr_X,tr_Y,max_examples=25,max_feats=15)
-		print "tr_XU\n",tr_XU.todense()
-		print "Test - Labelled"
-		misc.print_labels_1_feats(te_X,te_Y,max_examples=25,max_feats=15)
-		print "tr_X",tr_X.shape
-		print "tr_Y",tr_Y.shape
-		print "tr_XU",tr_XU.shape
-		print "te_X",te_X.shape
-		print "te_Y",te_Y.shape
+		# print "len(te_X.nonzero()[0])", len(te_X.nonzero()[0])
+		# print "Train - Labelled"
+		# misc.print_labels_1_feats(tr_X,tr_Y,max_examples=25,max_feats=15)
+		# print "tr_XU\n",tr_XU.todense()
+		# print "Test - Labelled"
+		# misc.print_labels_1_feats(te_X,te_Y,max_examples=25,max_feats=15)
+		# print "tr_X",tr_X.shape
+		# print "tr_Y",tr_Y.shape
+		# print "tr_XU",tr_XU.shape
+		# print "te_X",te_X.shape
+		# print "te_Y",te_Y.shape
 	(tr_X,tr_Y),tr_XU,(te_X,te_Y)=dm.get_data_no_dropout()
-	print 2
 	print_data(0)
-	print 3
 	for dr in drs:
-		print 4, dr
 		(tr_X,tr_Y),tr_XU,(te_X,te_Y)=dm.get_data_only_random_dropout(dr,2)
 		print_data(dr)
 
 	print '-'*50
 	sys.exit()
 
-if PICKLE_DATA_MANAGER:
-	print '*'*50
-	print 'PICKLE_DATA_MANAGER'
-	drs={.05,.1,.2,.3,.4,.5,.7,.8,.9}
-	maxCr=10
-	dm=data_manager.data_manager(	csr_train_feats=X_train,\
-									train_labels___0_means_unlabelled=Y_train,\
-									csr_test_feats=X_test,\
-									test_labels=Y_test,\
-									#dropout_rates=set(),\
-									dropout_rates=drs,\
-									max_num_dropout_corruptions_per_point=maxCr\
-								)
-	filename="dataMn_dr"+"".join(str(x) for x in drs)+"minCt"+str(LOAD_DATA_MIN_FEATURE_COUNT)+"maxCr"+maxCr+".pickle"
-	with open(filename,'wb') as f:
-		pickle.dump(dm,f,pickle.HIGHEST_PROTOCOL)
-	sys.exit()
-
-
-
 def print_train_and_test_error(prediction_fcn):
 	pred = prediction_fcn(tr_X)
 	print 'training score ', 1.0*np.sum(pred == tr_Y)/len(pred)
 	pred = prediction_fcn(te_X)
 	print 'test score ', 1.0*np.sum(pred == te_Y)/len(pred)
-
 if DO_BASIC_CLASSIFICATION:
 	dm=data_manager.data_manager(	csr_train_feats=X_train,\
 									train_labels___0_means_unlabelled=Y_train,\
@@ -220,78 +208,82 @@ if DO_BASIC_CLASSIFICATION:
 		print_train_and_test_error(p.predict_labels)
 	sys.exit(0)
 
+import matplotlib.pyplot as plt
+def graph(list_of_tuples_of_Val_X_and_Y_arrays,Val_description,x_label,file_name_base):
+	plt.figure()
+	plt.ylabel('test_error')
+	plt.xlabel(x_label)
+	file_name=file_name_base
+	min_x=1000000
+	min_y=1000000
+	max_x=0
+	max_y=0
+	for val, X, Y in list_of_tuples_of_Val_X_and_Y_arrays:
+		print "In plot"
+		print "val",val
+		print "X",X
+		print "Y",Y
+		plt.plot(X,Y,label=Val_description+"="+str(val),linewidth=2)
+		file_name+=","+str(val)
+		min_x=min(min_x,min(X))
+		min_y=min(min_y,min(Y))		
+		max_x=max(max_x,max(X))
+		max_y=max(max_y,max(Y))
+		print "plotted ",Val_description,val,file_name_base
+	print "Num of lines to plot:", len(list_of_tuples_of_Val_X_and_Y_arrays)
+	plt.xlim(min_x,max_x)
+	plt.ylim(0,max_y)
+	plt.legend(loc="lower right",prop={'size':6})
+	plt.savefig(file_name+".png")
+	#savefig(file_name,dpi=72)
+	print "NEW PLOTS SAVED!"
+	with open(file_name+".pickle","wb") as f:
+		pickle.dump((list_of_tuples_of_Val_X_and_Y_arrays,Val_description,x_label,file_name_base),f,pickle.HIGHEST_PROTOCOL)
+	print "RESULTS PICKLED!"
+
+if DO_SEMI_SUPERVISED_LEARNING:
+	if "perceptron_drs" in SEMI_SUPERVISED_RUNTYPES:
+		runtype="perceptron_drs"
+		drs=[.1,.3,.5,.7,.9] #Dropout RateS
+		print "Y_train[:10]",Y_train[:10], Y_train.dtype
+		dm=data_manager.data_manager(	csr_train_feats=X_train,\
+										train_labels___0_means_unlabelled=Y_train,\
+										csr_test_feats=X_test,\
+										test_labels=Y_test,\
+										dropout_rates=set(drs),\
+										max_num_dropout_corruptions_per_point=2\
+									)
+		print "\nperceptron_classifier"
+		rtg=[] #Results To Graph
+		for dr in drs:
+			p=classifier.perceptron_classifier(1)
+			ssl=semi_supervised_learner.semi_supervised_learner(\
+					data_manager=dm,\
+					classifier=p,\
+					bool_remove_features=False,\
+					# notice_for_feature_removal=None,\
+					# imbalance_ratio_to_trigger_notice=10,\
+					num_to_add_each_iteration=1000,\
+					max_labelled_frac=.8,\
+					random_drop_out_rate=dr,\
+					num_corruptions_per_data_point=1\
+					)
+
+			# import cProfile
+			# results=cProfile.runctx("ssl.do_semi_supervised_learning()",globals(),locals())
+			# results=cProfile.run("ssl.do_semi_supervised_learning()","ssl_stats.profile")
+			# import pstats
+			# p=pstats.Stats("ssl_stats.profile")
+			# p.sort_stats('cumulative').print_stats(10)
+			# p.sort_stats('tottime').print_stats(10)
+			results=ssl.do_semi_supervised_learning()
+			print "results",results
+			# results=ssl.do_semi_supervised_learning()
+			rtg.append((dr,results['num_labelled'],results['test_error_with_dropout']))
+			graph(	list_of_tuples_of_Val_X_and_Y_arrays=rtg,\
+					Val_description="Dropout Rate",\
+					x_label='num_labelled',\
+					file_name_base=runtype)
+	sys.exit(0)
 
 
-
-
-#idx0 = [i for i in range(len(labels)) if labels[i] == 0]
-
-trainpredict0 = clf.predict(train[:])
-p_trainpredict0 = clf.predict_proba(train[:])
-print "the predicted probabilities start with"
-print p_trainpredict0[:10]
-p = np.max(p_trainpredict0, axis=1)
-plt.hist(p, bins=100)
-
-def do_semi_supervised_learning():
-	idx0 = idx
-	cutoff = 0.7 # cutoff certainty
-	for j in [1,2]:
-		idx1 = [i for i in range(len(trainpredict0)) if not (i in idx0) and p[i] > cutoff]
-		clf.fit(train[idx0+idx1,:], labels[idx0+idx1])
-		trainingscore = clf.score(train[idx0+idx1,:], labels[idx0+idx1])
-		print 'SGD training score iter ', j, trainingscore
-		testpredict = clf.predict(test)
-		print 'SGD test score iter ', j, 1.0*np.sum(testpredict == gold)/len(testpredict)
-		idx0 = idx0+idx1
-		
-		trainpredict0 = clf.predict(train[:])
-		p_trainpredict0 = clf.predict_proba(train[:])
-		p = np.max(p_trainpredict0, axis=1)
-# do_semi_supervised_learning()
-
-
-# probs = clf.predict_proba(test)
-# p = np.max(probs, axis=1)
-# 
-# plt.hist(p, bins=100)
-
-# predict some more labels for fitems in the training set
-# pick the ones that have the highest confidence and add them to the labeled training set
-# retrain
-
-#co-training
-#split the features... randomly? according to how predictive they are (_coef?)
-
-
-# clf = linear_model.RidgeClassifier()
-# clf.fit(train[idx,:], labels[idx])
-# 
-# trainingscore = clf.score(train[idx,:], labels[idx])
-# print 'RidgeClassifier training score ', trainingscore
-# testpredict = clf.predict(test)
-# print 'RidgeClassifier test score ', 1.0*np.sum(testpredict == gold)/len(testpredict)
-# 
-
-
-
-
-
-# Compute accuracy based on seed rules
-# errRate0 = DL.error(test,gold,rules,nLabels)
-# print 'Accuracy with seed rules: ' + str(1-errRate0)
-# 
-# # Train classifier based on these labels
-# rulesDL = DL.train(train,labels,nLabels,threshold=0)
-# errRateDL = DL.error(test,gold,rulesDL,nLabels)
-# print 'Accuracy with decision list: ' + str(1-errRateDL)
-# 
-# # Yarowsky algorithm
-# rulesY = Yarowsky.train(train,rules,nLabels,test,gold)
-# errRateY = DL.error(test,gold,rulesY,nLabels)
-# print 'Accuracy with Yarowsky: ' + str(1-errRateY)
-
-# Yarowsky-cautiaus algorithm
-# rulesYC = Yarowsky.train(train,rules,nLabels,test,gold,cautiaus=5,useSmooth=0)
-# errRateYC = DL.error(test,gold,rulesYC,nLabels)
-# print 'Accuracy with Yarowsky-cautiaus: ' + str(1-errRateYC)

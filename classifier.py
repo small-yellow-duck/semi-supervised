@@ -46,7 +46,7 @@ class classifier:
 			l,c=self.predict_label_and_confidence(x)			
 			labels.append(l)
 			confidences.append(c)
-		return np.array(labels),np.array(confidences)
+		return np.array(labels,int),np.array(confidences)
 	def predict_labels(self,X):
 		ls,cs=self.predict_labels_and_confidences(X)
 		return ls
@@ -114,14 +114,6 @@ class averaged_perceptron_classifier(classifier):
 		ind=scores.argsort()
 		label = ind[-1]+1
 		confidence = scores[ind[-1]] - scores[ind[-2]]
-		# print x, self.averaged_perceptron
-		# print "x.shape, self.averaged_perceptron.shape",x.shape, self.averaged_perceptron.shape
-		# print "x", x
-		# print "scores", scores
-		# print "ind", ind
-		# print "label", label		
-		# print "confidence",confidence
-		# sys.exit()
 		return (label, confidence)
 
 	def __str__(self):
@@ -196,10 +188,8 @@ class perceptron_classifier(classifier):
 		self.percep.fit(X,Y)
 
 	def predict_label_and_confidence(self,x): 
-		"""This function does the work of predicting a label and
-		estimating the confidence of this label prediction.
-
-		The rest of the 'predict' functions ultimately call this."""
+		"""This function predicts a label and estimates the 
+		confidence of this label prediction."""
 		scores=self.percep.decision_function(x)
 		assert scores.shape[0]==1
 		scores=scores[0]
@@ -208,7 +198,7 @@ class perceptron_classifier(classifier):
 		confidence = scores[ind[-1]] - scores[ind[-2]]
 		def print_stuff():
 			print "x", x
-			print "scores", scores
+			print "score", scores
 			print "ind", ind
 			print "label", label		
 			print "confidence",confidence
@@ -225,6 +215,35 @@ class perceptron_classifier(classifier):
 
 		return (label, confidence)
 
+	def predict_labels_and_confidences(self,X):
+		"""TODO"""		
+		n=X.shape[0]
+		scores=self.percep.decision_function(X)
+		assert scores.shape[0]==n
+		# print "scores", scores
+		ind1=scores.argmax(axis=1).astype(np.int32)
+		labels = ind1+1
+		c1=scores[np.arange(n),ind1]
+		scores[np.arange(n),ind1]=-100
+		ind2=scores.argmax(axis=1).astype(np.int32)
+		c2=scores[np.arange(n),ind2]
+		confidence = c1-c2
+		def print_stuff():
+			# print "X", X
+			# print "scores", scores
+			print "ind1", ind1
+			print "ind2", ind2
+			print "labels", labels		
+			print "confidence",confidence
+			print "self.percep.predict(X)",self.percep.predict(X)
+
+		if self.verbosity>6: print_stuff()
+		assert all(labels == self.percep.predict(X))
+		return (labels, confidence)
+
+	def predict_labels(self,X):
+		labels=self.percep.predict(X)
+		return labels
 	def __str__(self):
 		my_str=",  number of passes through the data =" + str(self.n_iter)+\
 			"\n,  percep values =\n"+str(self.percep.coef_)
