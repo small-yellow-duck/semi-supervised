@@ -4,6 +4,42 @@
 		"selected_items":
 		[
 			[
+				"Co",
+				"Copy"
+			],
+			[
+				"s",
+				"scores"
+			],
+			[
+				"csr",
+				"csr_matrix"
+			],
+			[
+				"dr",
+				"dropout_rates"
+			],
+			[
+				"ra",
+				"random"
+			],
+			[
+				"num_f",
+				"num_failed_samples"
+			],
+			[
+				"Come",
+				"comment"
+			],
+			[
+				"max",
+				"max_examples"
+			],
+			[
+				"ver",
+				"verbosity"
+			],
+			[
 				"a",
 				"array"
 			],
@@ -22,10 +58,6 @@
 			[
 				"l_",
 				"l_old"
-			],
-			[
-				"s",
-				"set_of_keys"
 			],
 			[
 				"an",
@@ -51,9 +83,21 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 196.0,
+		"height": 392.0,
 		"selected_items":
 		[
+			[
+				":w",
+				":w - Save"
+			],
+			[
+				":W",
+				":w - Save"
+			],
+			[
+				":q",
+				"Set Syntax: SQL"
+			],
 			[
 				"save",
 				"Project: Save As"
@@ -67,9 +111,12 @@
 	},
 	"console":
 	{
-		"height": 0.0,
+		"height": 160.0,
 		"history":
 		[
+			"print \"hi\"",
+			"print A",
+			"A=100"
 		]
 	},
 	"distraction_free":
@@ -83,19 +130,28 @@
 	},
 	"file_history":
 	[
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/classifier.py",
+		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/Cellular_Automata_with_sets.py",
+		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/Bruces_cellular_automata.py",
+		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/run_perceptron_2014_02_16.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/data_manager.py",
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/project1.sublime-project",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/misc.py",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/classifier.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/semi_supervised_learner.py",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/runMe_kiri_2013-12-13.py",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/DL.py",
+		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/Default/Default (Windows).sublime-keymap",
+		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
+		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Willem/Desktop/ANSWER KEY.py",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/project1.sublime-project",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/README.md",
 		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/for_loops.py",
-		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/cellularautomata2.py",
-		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/Bruces_cellular_automata.py",
-		"/C/Users/Willem/Desktop/ANSWER KEY.py"
+		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/cellularautomata2.py"
 	],
 	"find":
 	{
-		"height": 28.0
+		"height": 36.0
 	},
 	"find_in_files":
 	{
@@ -110,6 +166,73 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"select",
+			"Select",
+			"several",
+			"eli",
+			"el",
+			"several",
+			"warm_start",
+			"pr",
+			"~n",
+			"predict confidences",
+			"			# results=cProfile.runctx(\"ssl.do_semi_supervised_learning()\",globals(),locals())\nGoing to predict confidences",
+			"mlf",
+			"perceptron_drs",
+			"Going to predict confidences",
+			"lts Recorded Going to predict confidences",
+			"Star",
+			"run_checks",
+			"train_labels___0_means_unlabelled__minus_1_means_excluded",
+			"bool_train_labelled_initially",
+			"int_train_orig_labels",
+			"bool_train_orig_labels",
+			"self.orig_labels",
+			"self.bool_verbose",
+			"False",
+			"		def initialize_all_attribute_variables():",
+			"len",
+			"m_t",
+			"CHECK",
+			"bool",
+			"bool_train_labelled",
+			"1",
+			"bool_train_labelled",
+			"edict confidenc",
+			"print_stuff",
+			"label",
+			"scores",
+			"ng to predict conf",
+			"set_labels",
+			"train labels",
+			"type",
+			"array_to_kron_with.dtype",
+			"tot_train_pts",
+			"num_unlabelled",
+			"num_excluded",
+			"num_labelled_tot",
+			"num_added_labels",
+			"num_labelled_initially",
+			"get_kron_array",
+			"__get_data__",
+			"PICKLE_DATA_MANAGER",
+			"get_kron_matrix",
+			"column",
+			"row,column",
+			"test_labels",
+			"sys",
+			"ignor",
+			"of",
+			"feats",
+			"several",
+			"MY PREDICTION DIFFERS FROM THE PERCEPTRONS",
+			"test_Y",
+			"train_Y",
+			"test_X",
+			"train_X",
+			".shape",
+			"train",
+			"Train",
 			"run_checks",
 			"get_num_train",
 			"train",
@@ -132,6 +255,7 @@
 		"regex": false,
 		"replace_history":
 		[
+			""
 		],
 		"reverse": false,
 		"show_context": true,
@@ -149,7 +273,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 28.0
+		"height": 36.0
 	},
 	"input":
 	{
@@ -178,6 +302,10 @@
 		]
 	},
 	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 130.0
+	},
 	"output.find_results":
 	{
 		"height": 0.0
@@ -185,7 +313,7 @@
 	"project": "project1.sublime-project",
 	"replace":
 	{
-		"height": 52.0
+		"height": 66.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -193,6 +321,54 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"",
+				"semi_supervised_learner.py"
+			],
+			[
+				"su",
+				"semi_supervised_learner.py"
+			],
+			[
+				"cl",
+				"classifier.py"
+			],
+			[
+				"r",
+				"run_perceptron_2014_02_16.py"
+			],
+			[
+				"d",
+				"data_manager.py"
+			],
+			[
+				"ru",
+				"run_perceptron_2014_02_16.py"
+			],
+			[
+				"c",
+				"classifier.py"
+			],
+			[
+				"s",
+				"semi_supervised_learner.py"
+			],
+			[
+				"dm",
+				"data_manager.py"
+			],
+			[
+				"se",
+				"semi_supervised_learner.py"
+			],
+			[
+				"da",
+				"data_manager.py"
+			],
+			[
+				"f",
+				"Find Results"
+			]
 		],
 		"width": 0.0
 	},
@@ -219,7 +395,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 189.0,
+	"side_bar_width": 70.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{

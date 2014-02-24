@@ -94,7 +94,7 @@ class semi_supervised_learner:
 					dm.__get_data__(percent_dropout=self.random_drop_out_rate,\
 									num_dropout_corruptions_per_point=self.num_corruptions_per_data_point,\
 									bool_targetted_dropout=self.bool_remove_features)
-			print "start train,",
+			print "start train, ",
 			self.classifier.train(train_feats_labelled,train_labels,self.bool_warm_start)
 			def record_results():
 				test_error_with_dropout=self.get_error(test_feats,test_labels)

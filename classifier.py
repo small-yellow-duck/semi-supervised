@@ -72,9 +72,11 @@ class averaged_perceptron_classifier(classifier):
 		self.averaged_perceptron=None
 		self.__reset_perceptron__()
 		self.verbosity=verbosity
+
 	def __reset_perceptron__(self): #Not part of external interface
 		self.percep=linear_model.Perceptron(n_iter=1,warm_start=True)
 		self.averaged_perceptron=None
+
 	def train(self,X,Y, warm_start=True):
 		"""This will train the classifier"""
 		assert X.shape[0]==len(Y)
@@ -108,6 +110,7 @@ class averaged_perceptron_classifier(classifier):
 			for s in samples: print s
 		self.averaged_perceptron=sum(samples)/len(samples)
 		print "averaged_perceptron:\n",self.averaged_perceptron
+
 
 	def predict_label_and_confidence(self,x): 
 		"""This function does the work of predicting a label and
