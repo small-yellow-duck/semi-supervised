@@ -7,7 +7,7 @@ def argmax(values):
 	return max_index
 
 def pause():
-    raw_input("Press enter to continue")
+   raw_input("Press enter to continue")
 
 def sortedInd(x,reverse=False):
 	return [i[0] for i in sorted(enumerate(x),reverse=reverse,key=lambda x:x[1])]

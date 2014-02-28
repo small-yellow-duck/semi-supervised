@@ -130,12 +130,12 @@
 	},
 	"file_history":
 	[
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/misc.py",
 		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/Cellular_Automata_with_sets.py",
 		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/Bruces_cellular_automata.py",
 		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/run_perceptron_2014_02_16.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/data_manager.py",
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/misc.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/classifier.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/semi_supervised_learner.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/runMe_kiri_2013-12-13.py",
@@ -166,6 +166,26 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"rand",
+			"randint",
+			"num_labels",
+			"rand_seed",
+			"rand",
+			"rand_seed",
+			"ha",
+			"ma",
+			"fea",
+			"un",
+			"Non",
+			"rand",
+			"ran",
+			"26",
+			"all",
+			"feats",
+			"the",
+			"something",
+			"several",
+			"occurrences",
 			"select",
 			"Select",
 			"several",
@@ -301,14 +321,14 @@
 			1.0
 		]
 	},
-	"menu_visible": true,
+	"menu_visible": false,
 	"output.exec":
 	{
 		"height": 130.0
 	},
 	"output.find_results":
 	{
-		"height": 0.0
+		"height": 130.0
 	},
 	"project": "project1.sublime-project",
 	"replace":
@@ -323,7 +343,15 @@
 		[
 			[
 				"",
-				"semi_supervised_learner.py"
+				"12	Switch to another tab and automatically jump to"
+			],
+			[
+				"mi",
+				"misc.py"
+			],
+			[
+				"u",
+				"untitled"
 			],
 			[
 				"su",
@@ -395,7 +423,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 70.0,
+	"side_bar_width": 76.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{

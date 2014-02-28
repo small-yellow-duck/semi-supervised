@@ -27,8 +27,8 @@ else:
 	NUM_BETWEEN_SAMPLES=1000
 TEST_DATA_MANAGER=False
 DO_SEMI_SUPERVISED_LEARNING=True
-SEMI_SUPERVISED_RUNTYPES={"per_drs"}
-#SEMI_SUPERVISED_RUNTYPES={"perceptron_classifier","averaged_perceptron_classifier"}
+#SEMI_SUPERVISED_RUNTYPES={"lr_drs","per_drs","per_ave_drs"}
+SEMI_SUPERVISED_RUNTYPES={"lr_drs"}
 DO_BASIC_CLASSIFICATION=not DO_SEMI_SUPERVISED_LEARNING
 LEARNERS_TO_USE={"Perceptron","perceptron_classifier","averaged_perceptron_classifier","LogisticRegression"}
 #DROPOUT_RATES
@@ -245,7 +245,6 @@ if DO_SEMI_SUPERVISED_LEARNING:
 	import datetime
 	file_name_base = str(datetime.datetime.now())[5:16].replace(":",",").replace(" ","_")
 	if "per_drs" in SEMI_SUPERVISED_RUNTYPES:
-		runtype="per_drs"
 		drs=[.1,.3,.5,.7,.9] #Dropout RateS
 		print "Y_train[:10]",Y_train[:10], Y_train.dtype
 		dm=data_manager.data_manager(	csr_train_feats=X_train,\
@@ -258,11 +257,8 @@ if DO_SEMI_SUPERVISED_LEARNING:
 		print "\nperceptron_classifier"
 		rtg=[] #Results To Graph
 
-
-
-
 		for dr in drs:
-			p=classifier.perceptron_classifier(1)
+			p=classifier.Perceptron_Classifier(1)
 			rf,rfs=False,"rfF"
 			na=4000
 			mlf=.8
@@ -289,6 +285,107 @@ if DO_SEMI_SUPERVISED_LEARNING:
 			# p.sort_stats('tottime').print_stats(10)
 			results=ssl.do_semi_supervised_learning()
 			print "results",results
+			rtg.append((dr,results['num_labelled'],results['test_error_with_dropout']))
+			filename=file_name_base+"_"+p.short_description()+"_"+str(rfs)+"_na"+str(na)+"_UPTOdr"+str(dr)+"_nc"+str(nc)+"_mlf"+str(mlf)
+			graph(	list_of_tuples_of_Val_X_and_Y_arrays=rtg,\
+					Val_description="Dropout Rate",\
+					x_label='num_labelled',\
+					file_name_base=filename)
+			with open(filename+".pickle", "wb") as f:
+				pickle.dump(results,f,pickle.HIGHEST_PROTOCOL)
+	
+
+	if "per_ave_drs" in SEMI_SUPERVISED_RUNTYPES:
+		drs=[.1,.3,.5,.7,.9] #Dropout RateS
+		dm=data_manager.data_manager(	csr_train_feats=X_train,\
+										train_labels___0_means_unlabelled=Y_train,\
+										csr_test_feats=X_test,\
+										test_labels=Y_test,\
+										dropout_rates=set(drs),\
+										max_num_dropout_corruptions_per_point=10\
+									)
+		print "\naveraged_perceptron_classifier"
+		rtg=[] #Results To Graph
+
+		for dr in drs:
+			p=classifier.Averaged_Perceptron_Classifier(n_iter=1,sample_frequency_for_averaging=1000)
+			rf,rfs=False,"rfF"
+			na=4000
+			mlf=.9
+			dr=dr
+			nc=10
+
+			ssl=semi_supervised_learner.semi_supervised_learner(\
+					data_manager=dm,\
+					classifier=p,\
+					bool_remove_features=rf,\
+					# notice_for_feature_removal=None,\
+					# imbalance_ratio_to_trigger_notice=10,\
+					num_to_add_each_iteration=na,\
+					max_labelled_frac=mlf,\
+					random_drop_out_rate=dr,\
+					num_corruptions_per_data_point=nc\
+					)
+
+			# import cProfile
+			# results=cProfile.run("ssl.do_semi_supervised_learning()","ssl_stats.profile")
+			# import pstats
+			# p=pstats.Stats("ssl_stats.profile")
+			# p.sort_stats('cumulative').print_stats(10)
+			# p.sort_stats('tottime').print_stats(10)
+			results=ssl.do_semi_supervised_learning()
+			print "results",results
+			rtg.append((dr,results['num_labelled'],results['test_error_with_dropout']))
+			filename=file_name_base+"_"+p.short_description()+"_"+str(rfs)+"_na"+str(na)+"_UPTOdr"+str(dr)+"_nc"+str(nc)+"_mlf"+str(mlf)
+			graph(	list_of_tuples_of_Val_X_and_Y_arrays=rtg,\
+					Val_description="Dropout Rate",\
+					x_label='num_labelled',\
+					file_name_base=filename)
+			with open(filename+".pickle", "wb") as f:
+				pickle.dump(results,f,pickle.HIGHEST_PROTOCOL)
+
+	
+	if "lr_drs" in SEMI_SUPERVISED_RUNTYPES:
+		drs=[.1,.3,.5,.7,.9] #Dropout RateS
+		print "Y_train[:10]",Y_train[:10], Y_train.dtype
+		dm=data_manager.data_manager(	csr_train_feats=X_train,\
+										train_labels___0_means_unlabelled=Y_train,\
+										csr_test_feats=X_test,\
+										test_labels=Y_test,\
+										dropout_rates=set(drs),\
+										max_num_dropout_corruptions_per_point=10\
+									)
+		print "\nlogistic regression classifier"
+		rtg=[] #Results To Graph
+
+		for dr in drs:
+			p=classifier.Logistic_Regression_Classifier()
+			rf,rfs=False,"rfF"
+			na=4000
+			mlf=.8
+			dr=dr
+			nc=10
+
+			ssl=semi_supervised_learner.semi_supervised_learner(\
+					data_manager=dm,\
+					classifier=p,\
+					bool_remove_features=rf,\
+					# notice_for_feature_removal=None,\
+					# imbalance_ratio_to_trigger_notice=10,\
+					num_to_add_each_iteration=na,\
+					max_labelled_frac=mlf,\
+					random_drop_out_rate=dr,\
+					num_corruptions_per_data_point=nc\
+					)
+
+			# import cProfile
+			# results=cProfile.run("ssl.do_semi_supervised_learning()","ssl_stats.profile")
+			# import pstats
+			# p=pstats.Stats("ssl_stats.profile")
+			# p.sort_stats('cumulative').print_stats(10)
+			# p.sort_stats('tottime').print_stats(10)
+			results=ssl.do_semi_supervised_learning()
+			print "results", results
 			rtg.append((dr,results['num_labelled'],results['test_error_with_dropout']))
 			filename=file_name_base+"_"+p.short_description()+"_"+str(rfs)+"_na"+str(na)+"_UPTOdr"+str(dr)+"_nc"+str(nc)+"_mlf"+str(mlf)
 			graph(	list_of_tuples_of_Val_X_and_Y_arrays=rtg,\

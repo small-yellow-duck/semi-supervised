@@ -4,6 +4,7 @@ be used for semi-supervised learning"""
 
 from __future__ import division
 
+import random
 import math
 import misc
 import numpy as np
@@ -15,44 +16,49 @@ import sys
 
 classes_to_test={'perceptron_classifier'}
 
-class classifier:
+class Classifier:
 	def __init__(self):
 		assert(false) #this should be over-ridden in the subclasses
+
 	def train(self,X,Y, warm_start=True): #ABSTRACT CLASS!!!!! ABSTRACT CLASS!!!!!
 		"""This will train the classifier"""
 		sys.exit(1) #This should be implemented in the subclass
 		pass
 	
-	"""Vectorized Versions of the previous 3 functions"""
-	def predict_label_and_confidence(self,x): #ABSTRACT CLASS!!!!! ABSTRACT CLASS!!!!!
-		"""This function does the work of predicting a label and
-		estimating the confidence of this label prediction.
+	"""Functions that work on a single point"""
+	FUNCTIONS_THAT_WORK_ON_A_SINGLE_POINT=True
+	if FUNCTIONS_THAT_WORK_ON_A_SINGLE_POINT: 
+		def predict_label_and_confidence(self,x): #ABSTRACT CLASS!!!!! ABSTRACT CLASS!!!!!
+			"""This function does the work of predicting a label and
+			estimating the confidence of this label prediction.
 
-		The rest of the 'predict' functions ultimately call this."""
-		sys.exit(1) #This should be implemented in the subclass
-		label, confidence=None,None
-		return (label, confidence)
-	def predict_label(self,x):
-		l,c=self.predict_label_and_confidence(x)
-		return l
-	def predict_confidence(self,x):
-		l,c=self.predict_label_and_confidence(x)
-		return c
+			The rest of the 'predict' functions ultimately call this."""
+			sys.exit(1) #This should be implemented in the subclass
+			label, confidence=None,None
+			return (label, confidence)
+		def predict_label(self,x):
+			l,c=self.predict_label_and_confidence(x)
+			return l
+		def predict_confidence(self,x):
+			l,c=self.predict_label_and_confidence(x)
+			return c
 
 	"""Vectorized Versions of the previous 3 functions"""
-	def predict_labels_and_confidences(self,X):
-		labels,confidences=[],[]
-		for x in X:
-			l,c=self.predict_label_and_confidence(x)			
-			labels.append(l)
-			confidences.append(c)
-		return np.array(labels,int),np.array(confidences)
-	def predict_labels(self,X):
-		ls,cs=self.predict_labels_and_confidences(X)
-		return ls
-	def predict_confidences(self,X):
-		ls,cs=self.predict_labels_and_confidences(X)
-		return ls
+	FUNCTIONS_THAT_WORK_ON_A_MATRIX_OF_FEATURE_VECTORS=True
+	if FUNCTIONS_THAT_WORK_ON_A_MATRIX_OF_FEATURE_VECTORS: 
+		def predict_labels_and_confidences(self,X):
+			labels,confidences=[],[]
+			for x in X:
+				l,c=self.predict_label_and_confidence(x)			
+				labels.append(l)
+				confidences.append(c)
+			return np.array(labels,int),np.array(confidences)
+		def predict_labels(self,X):
+			ls,cs=self.predict_labels_and_confidences(X)
+			return ls
+		def predict_confidences(self,X):
+			ls,cs=self.predict_labels_and_confidences(X)
+			return ls
 
 	def __str__(self): #ABSTRACT CLASS!!!!! ABSTRACT CLASS!!!!!
 		sys.exit(1) #This should be implemented in the subclass
@@ -62,7 +68,7 @@ class classifier:
 		print "This should be implemented in the subclass!"
 		assert False
 
-class averaged_perceptron_classifier(classifier): 
+class Averaged_Perceptron_Classifier(Classifier): 
 	def __init__(self,n_iter,sample_frequency_for_averaging,verbosity=5):
 		"""TODO - TODO - allow this to do averaging or not"""
 		self.n_iter=n_iter #The number of passes through the data before the next update
@@ -109,19 +115,32 @@ class averaged_perceptron_classifier(classifier):
 			print "perceptron samples:"
 			for s in samples: print s
 		self.averaged_perceptron=sum(samples)/len(samples)
-		print "averaged_perceptron:\n",self.averaged_perceptron
-
+		# print "averaged_perceptron:\n",self.averaged_perceptron
 
 	def predict_label_and_confidence(self,x): 
-		"""This function does the work of predicting a label and
-		estimating the confidence of this label prediction.
-
-		The rest of the 'predict' functions ultimately call this."""
 		scores=(x*self.averaged_perceptron.transpose())[0]
 		ind=scores.argsort()
 		label = ind[-1]+1
 		confidence = scores[ind[-1]] - scores[ind[-2]]
 		return (label, confidence)
+
+	def predict_labels_and_confidences(self,X):
+		scores=(X*self.averaged_perceptron.transpose())
+		# print scores.shape
+		ind=scores.argsort(axis=1)
+		ind_1=ind[:,-1]
+		ind_2=ind[:,-2]
+		labels = ind_1+1
+		rows=np.arange(X.shape[0])
+		confidences = scores[rows,ind_1] - scores[rows,ind_2]
+		'''Spot Check'''
+		r=random.randint(0,X.shape[0]-1)
+		x=X[r]
+		l,c=self.predict_label_and_confidence(x)
+		assert l==labels[r]
+		assert c==confidences[r]
+		return (labels, confidences)
+
 
 	def __str__(self):
 		my_str="num pts to train on between samples to use in average ="+str(self.sf)+\
@@ -130,7 +149,9 @@ class averaged_perceptron_classifier(classifier):
 			",  Ave percep values =\n"+str(self.averaged_perceptron)
 		return my_str
 
-		#print something useful out!
+	def short_description(self):
+		return "ave_per"+str(self.n_iter)+","+str(self.sf)
+
 
 if __name__=="__main__" and 'averaged_perceptron_classifier' in classes_to_test:
 	
@@ -172,9 +193,8 @@ if __name__=="__main__" and 'averaged_perceptron_classifier' in classes_to_test:
 	print "Train perceptron from my class: {:.2%} correct".format(sum(labels==train_Y)/len(labels))
 	print p
 
-class perceptron_classifier(classifier): 
+class Perceptron_Classifier(Classifier): 
 	def __init__(self,n_iter,verbosity=5):
-		"""TODO - TODO - allow this to do averaging or not"""
 		self.n_iter=n_iter #The number of passes through the data before the next update
 		self.verbosity=verbosity
 		assert verbosity in range(11)
@@ -223,7 +243,6 @@ class perceptron_classifier(classifier):
 		return (label, confidence)
 
 	def predict_labels_and_confidences(self,X):
-		"""TODO"""		
 		n=X.shape[0]
 		scores=self.percep.decision_function(X)
 		assert scores.shape[0]==n
@@ -294,3 +313,99 @@ if __name__=="__main__" and 'perceptron_classifier' in classes_to_test:
 
 
 
+class Logistic_Regression_Classifier(Classifier): 
+		def __init__(	self,\
+									penalty='l2', \
+									dual=False, \
+									tol=0.0001, \
+									C=1.0, \
+									fit_intercept=True, \
+									intercept_scaling=1, \
+									class_weight=None, \
+									random_state=None,\
+									verbosity=5):
+			self.penalty=penalty
+			self.dual=dual
+			self.tol=tol
+			self.C=C
+			self.fit_intercept=fit_intercept
+			self.intercept_scaling=intercept_scaling
+			self.class_weight=class_weight
+			self.random_state=random_state
+			self.verbosity=verbosity
+
+			assert verbosity in range(11)
+			self.lr=None #set later
+			self.__reset_lr__()
+
+		def __reset_lr__(self): #Not part of external interface
+			self.lr=linear_model.LogisticRegression(penalty=self.penalty, dual=self.dual, tol=self.tol, C=self.C, fit_intercept=self.fit_intercept, intercept_scaling=self.intercept_scaling, class_weight=self.class_weight, random_state=self.random_state)
+
+		def train(self,X,Y, warm_start=True):
+			"""This will train the classifier"""
+			assert X.shape[0]==len(Y)
+			u=np.unique(Y)
+			assert all(u==np.arange(1,len(u)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
+			if not warm_start: 
+				self.__reset_lr__()
+			self.lr.fit(X,Y)
+
+		def predict_label_and_confidence(self,x): 
+			"""This function predicts a label and estimates the 
+			confidence of this label prediction."""
+			scores=self.lr.predict_proba(x)
+			assert scores.shape[0]==1
+			scores=scores[0]
+			label=scores.argmax()+1
+			confidence = scores.max()
+			def print_stuff():
+				print "x", x
+				print "score", scores
+				print "ind", ind
+				print "label", label		
+				print "confidence",confidence
+				print "self.lr.predict(x)",self.lr.predict(x)
+
+			if self.verbosity>9: print_stuff()
+			if label != self.lr.predict(x):
+				if confidence>0 or self.verbosity>8:
+					print "MY PREDICTION DIFFERS FROM THE PERCEPTRONS"
+					print_stuff()
+				if confidence>0:
+					print "CONFIDENCE GREATER THAN 0, SO THIS SHOULDN'T HAPPEN - EXITING"
+					sys.exit(1)
+
+			return (label, confidence)
+
+		def predict_labels_and_confidences(self,X):
+			"""TODO"""		
+			n=X.shape[0]
+			scores=self.lr.predict_proba(X)
+			confidences=scores.max(axis=1)
+			labels=scores.argmax(axis=1)+1
+			def print_stuff():
+				# print "X", X
+				# print "scores", scores
+				print "labels", labels		
+				print "confidence",confidence
+				print "self.lr.predict(X)",self.lr.predict(X)
+
+			if self.verbosity>6: print_stuff()
+			assert all(labels == self.lr.predict(X))
+			"""Spot Check"""
+			r=random.randint(0,X.shape[0]-1)
+			l,c=self.predict_label_and_confidence(X[r])
+			assert labels[r]
+			assert confidences[r]
+			return (labels, confidences)
+
+		def predict_labels(self,X):
+			labels=self.lr.predict(X)
+			return labels
+		def __str__(self):
+			my_str=",  number of passes through the data =" + str(self.n_iter)+\
+				"\n,  percep values =\n"+str(self.lr.coef_)
+			return my_str
+
+		def short_description(self):
+			return "lr"+str(self.C)+self.penalty
