@@ -360,21 +360,22 @@ if DO_SEMI_SUPERVISED_LEARNING:
 
 		for dr in drs:
 			p=classifier.Logistic_Regression_Classifier()
+			cdb=classifier.Classifier_DropoutRate_Bundle(p,dr)
 			rf,rfs=False,"rfF"
-			na=4000
-			mlf=.8
+			na=2000
+			mlf=.9
 			dr=dr
-			nc=10
+			nc=2
 
 			ssl=semi_supervised_learner.semi_supervised_learner(\
 					data_manager=dm,\
-					classifier=p,\
+					ssl_Classifier_DropoutRate_Bundle=cdb,\
+					# dict_test_set_Classifier_DropoutRate_Bundles={},\
 					bool_remove_features=rf,\
 					# notice_for_feature_removal=None,\
 					# imbalance_ratio_to_trigger_notice=10,\
 					num_to_add_each_iteration=na,\
 					max_labelled_frac=mlf,\
-					random_drop_out_rate=dr,\
 					num_corruptions_per_data_point=nc\
 					)
 

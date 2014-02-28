@@ -17,24 +17,24 @@ class semi_supervised_learner:
 
 	def __init__(self,\
 				data_manager,\
-				classifier,\
+				ssl_Classifier_DropoutRate_Bundle,\
+				dict_test_set_Classifier_DropoutRate_Bundles={},\
 				bool_remove_features=False,\
 				notice_for_feature_removal=None,\
 				imbalance_ratio_to_trigger_notice=10,\
 				num_to_add_each_iteration=1000,\
-				max_labelled_frac=.9,\
-				random_drop_out_rate=0,\
+				max_labelled_frac=.95,\
 				num_corruptions_per_data_point=1\
 				):
 		self.data_manager=data_manager
-		self.classifier=classifier
+		self.cls_dr=ssl_Classifier_DropoutRate_Bundle
 
 		self.bool_remove_features=bool_remove_features
 		self.notice_for_feature_removal=notice_for_feature_removal
 		self.imbalance_ratio_to_trigger_notice=imbalance_ratio_to_trigger_notice
 		self.num_to_add_each_iteration=num_to_add_each_iteration #if this is a dictionary it will be interpreted as the number of each class
 		self.max_labelled_frac=max_labelled_frac
-		self.random_drop_out_rate=random_drop_out_rate
+		# self.cls_dr.get_dr()=random_drop_out_rate
 		self.num_corruptions_per_data_point=num_corruptions_per_data_point
 
 		#Default Values
@@ -55,7 +55,7 @@ class semi_supervised_learner:
 
 	def get_error(self,list_of_sets_of_feats,list_of_labels):
 		assert list_of_sets_of_feats.shape[0]==len(list_of_labels)
-		labels_pred=self.classifier.predict_labels(list_of_sets_of_feats)
+		labels_pred=self.cls_dr.get_classifier().predict_labels(list_of_sets_of_feats)
 		n=len(list_of_labels)
 		error=(1/n)*sum(labels_pred[d]!=list_of_labels[d] for d in range(n))
 		return error
@@ -69,11 +69,11 @@ class semi_supervised_learner:
 		print "1"
 		if self.bool_warm_start:			
 			((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels))=\
-					dm.__get_data__(percent_dropout=self.random_drop_out_rate,\
+					dm.__get_data__(percent_dropout=self.cls_dr.get_dr(),\
 									num_dropout_corruptions_per_point=self.num_corruptions_per_data_point,\
 									bool_targetted_dropout=self.bool_remove_features)
 			for i in range(3):
-				self.classifier.train(train_feats_labelled,train_labels,self.bool_warm_start)
+				self.cls_dr.get_classifier().train(train_feats_labelled,train_labels,self.bool_warm_start)
 		print "1"
 		print "dm.get_fraction_labelled()",dm.get_fraction_labelled()
 		while dm.get_fraction_labelled()\
@@ -91,11 +91,11 @@ class semi_supervised_learner:
 			# 		". Starting next iteration "
 			# self.print_status()
 			((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels))=\
-					dm.__get_data__(percent_dropout=self.random_drop_out_rate,\
+					dm.__get_data__(percent_dropout=self.cls_dr.get_dr(),\
 									num_dropout_corruptions_per_point=self.num_corruptions_per_data_point,\
 									bool_targetted_dropout=self.bool_remove_features)
 			print "start train, ",
-			self.classifier.train(train_feats_labelled,train_labels,self.bool_warm_start)
+			self.cls_dr.get_classifier().train(train_feats_labelled,train_labels,self.bool_warm_start)
 			def record_results():
 				test_error_with_dropout=self.get_error(test_feats,test_labels)
 				# print type(train_labels)
@@ -112,7 +112,7 @@ class semi_supervised_learner:
 				print "Results Recorded",
 			record_results()
 
-			dm.label_top_n(self.num_to_add_each_iteration,self.classifier,self.str_labels_to_forget)
+			dm.label_top_n(self.num_to_add_each_iteration,self.cls_dr.get_classifier(),self.str_labels_to_forget)
 			print "top n labelled"
 
 			#Remove features that no longer help with generalization

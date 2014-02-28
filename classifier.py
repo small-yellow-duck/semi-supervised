@@ -16,6 +16,23 @@ import sys
 
 classes_to_test={'perceptron_classifier'}
 
+class Classifier_DropoutRate_Bundle:
+	def __init__(self,classifier,dropout_rate):
+		assert isinstance(classifier,Classifier)
+		assert 0<=dropout_rate<1
+		self.cls=classifier
+		self.dr=dropout_rate
+	def get_classifier(self):
+		return self.cls
+	def get_dr(self):
+		return self.dr
+	def set_classifier(self, classifier):
+		self.cls=classifier
+	def set_dropout_rate(self, dropout_rate):
+		self.dr=dropout_rate
+
+
+
 class Classifier:
 	def __init__(self):
 		assert(false) #this should be over-ridden in the subclasses
