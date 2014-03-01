@@ -111,13 +111,7 @@
 	},
 	"console":
 	{
-		"height": 160.0,
-		"history":
-		[
-			"print \"hi\"",
-			"print A",
-			"A=100"
-		]
+		"height": 160.0
 	},
 	"distraction_free":
 	{
@@ -155,7 +149,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 90.0,
+		"height": 0.0,
 		"where_history":
 		[
 			""
@@ -330,7 +324,6 @@
 	{
 		"height": 130.0
 	},
-	"project": "project1.sublime-project",
 	"replace":
 	{
 		"height": 66.0
@@ -408,24 +401,10 @@
 		],
 		"width": 0.0
 	},
-	"select_symbol":
-	{
-		"height": 0.0,
-		"selected_items":
-		[
-		],
-		"width": 0.0
-	},
-	"settings":
-	{
-	},
 	"show_minimap": false,
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
 	"side_bar_width": 76.0,
-	"status_bar_visible": true,
-	"template_settings":
-	{
-	}
+	"status_bar_visible": true
 }
