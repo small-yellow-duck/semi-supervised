@@ -28,7 +28,7 @@ else:
 TEST_DATA_MANAGER=False
 DO_SEMI_SUPERVISED_LEARNING=True
 #SEMI_SUPERVISED_RUNTYPES={"lr_drs","per_drs","per_ave_drs"}
-SEMI_SUPERVISED_RUNTYPES={"lr_drs"}
+SEMI_SUPERVISED_RUNTYPES={"per_drs"}
 DO_BASIC_CLASSIFICATION=not DO_SEMI_SUPERVISED_LEARNING
 LEARNERS_TO_USE={"Perceptron","perceptron_classifier","averaged_perceptron_classifier","LogisticRegression"}
 #DROPOUT_RATES
@@ -241,6 +241,101 @@ def graph(list_of_tuples_of_Val_X_and_Y_arrays,Val_description,x_label,file_name
 		pickle.dump((list_of_tuples_of_Val_X_and_Y_arrays,Val_description,x_label,file_name_base),f,pickle.HIGHEST_PROTOCOL)
 	print "RESULTS PICKLED!"
 
+import datetime
+def run_then_graph_semi_supervised_learning_set(data_manager,dict_diff_from_defaults,list_of_dicts_of_run_specific_values,runs_description="DEFAULT"):
+	"""Runs the semi_supervised_learner multiple times with different paramters
+
+	There are a bunch of default paramter values. Also: 
+
+	dict_diff_from_defaults: used to initialize some parameters differently from the defaults.
+	list_of_dicts_of_run_specific_values: used to change some parameters for each run.
+
+	"""
+	str_date_time = str(datetime.datetime.now())[5:16].replace(":",",").replace(" ","_")
+
+	ss_params={}
+	ss_params["ssl_Classifier_DropoutRate_Bundle"]=\
+		classifier.Classifier_DropoutRate_Bundle(classifier.Averaged_Perceptron_Classifier(1,1000),.5)
+	ss_params["dict_test_set_Classifier_DropoutRate_Bundles"]={}
+	ss_params["bool_remove_features"]=False
+	ss_params["notice_for_feature_removal"]=None
+	ss_params["imbalance_ratio_to_trigger_notice"]=10
+	ss_params["num_to_add_each_iteration"]=2000
+	ss_params["max_labelled_frac"]=.95
+	ss_params["num_corruptions_per_data_point"]=2
+	ss_params["run_description"]="DEFAULT VALUES - THIS SHOULD HAVE BEEN RESET!"
+	def change_params(dict_params):
+		for key in dict_params:
+			assert key in ss_params
+			ss_params[key]=dict_params[key]
+	change_params(dict_diff_from_defaults)
+	rtg=[] #Results To Graph
+	for d in list_of_dicts_of_run_specific_values:
+		change_params(d)
+		ss_params["ssl_Classifier_DropoutRate_Bundle"].get_classifier().reset()
+		for key, cdb in ss_params["dict_test_set_Classifier_DropoutRate_Bundles"]:
+			cdb.get_classifier().reset()
+		ssl=semi_supervised_learner.semi_supervised_learner(\
+			data_manager=data_manager,\
+			ssl_Classifier_DropoutRate_Bundle=ss_params["ssl_Classifier_DropoutRate_Bundle"],\
+			dict_test_set_Classifier_DropoutRate_Bundles=ss_params["dict_test_set_Classifier_DropoutRate_Bundles"],\
+			bool_remove_features=ss_params["bool_remove_features"],\
+			notice_for_feature_removal=ss_params["notice_for_feature_removal"],\
+			imbalance_ratio_to_trigger_notice=ss_params["imbalance_ratio_to_trigger_notice"],\
+			num_to_add_each_iteration=ss_params["num_to_add_each_iteration"],\
+			max_labelled_frac=ss_params["max_labelled_frac"],\
+			num_corruptions_per_data_point=ss_params["num_corruptions_per_data_point"]\
+			)
+		results=ssl.do_semi_supervised_learning()
+		# print "results", results
+		rtg.append((ss_params["run_description"],results['num_labelled'],results['test_error_with_dropout']))
+		brf=ss_params["bool_remove_features"]
+		rfs="rf"+"T"*brf+"F"*(not brf) #rfT if true, else rfF
+		filename=	str_date_time+"_"+\
+							runs_description+"_UPTO"+ss_params["run_description"]+"_"+\
+							ss_params["ssl_Classifier_DropoutRate_Bundle"].get_classifier().short_description()+"_"+\
+							str(rfs)+\
+							"_na"+str(ss_params["num_to_add_each_iteration"])+\
+							"_dr"+str(ss_params["ssl_Classifier_DropoutRate_Bundle"].get_dr())+\
+							"_nc"+str(ss_params["num_corruptions_per_data_point"])+\
+							"_mlf"+str(ss_params["max_labelled_frac"])
+		graph(	list_of_tuples_of_Val_X_and_Y_arrays=rtg,\
+						Val_description="Dropout Rate",\
+						x_label='num_labelled',\
+						file_name_base=filename)
+		with open(filename+".pickle", "wb") as f:
+			pickle.dump(results,f,pickle.HIGHEST_PROTOCOL)
+
+
+
+if DO_SEMI_SUPERVISED_LEARNING:
+	drs=[.1,.3,.5,.7,.9] #Dropout RateS
+	dm=data_manager.data_manager(	csr_train_feats=X_train,\
+									train_labels___0_means_unlabelled=Y_train,\
+									csr_test_feats=X_test,\
+									test_labels=Y_test,\
+									dropout_rates=set(drs),\
+									max_num_dropout_corruptions_per_point=10\
+								)
+	for runtype in SEMI_SUPERVISED_RUNTYPES:
+		dict_diff_from_defaults={}
+		list_of_dicts_of_run_specific_values=[]
+
+		'''Initialize parameter dicts differently for different run-types'''
+		if runtype=="per_drs":
+			p=classifier.Perceptron_Classifier(1)
+			for dr in drs:
+				d={}
+				d["ssl_Classifier_DropoutRate_Bundle"]=classifier.Classifier_DropoutRate_Bundle(p,dr)
+				d["run_description"]="dr"+str(dr)
+				list_of_dicts_of_run_specific_values.append(d)
+
+		run_then_graph_semi_supervised_learning_set(data_manager=dm,\
+																						dict_diff_from_defaults={},\
+																						list_of_dicts_of_run_specific_values=list_of_dicts_of_run_specific_values,\
+																						runs_description=runtype)
+	sys.exit(0)
+
 if DO_SEMI_SUPERVISED_LEARNING:
 	import datetime
 	file_name_base = str(datetime.datetime.now())[5:16].replace(":",",").replace(" ","_")
@@ -293,8 +388,6 @@ if DO_SEMI_SUPERVISED_LEARNING:
 					file_name_base=filename)
 			with open(filename+".pickle", "wb") as f:
 				pickle.dump(results,f,pickle.HIGHEST_PROTOCOL)
-	
-
 	if "per_ave_drs" in SEMI_SUPERVISED_RUNTYPES:
 		drs=[.1,.3,.5,.7,.9] #Dropout RateS
 		dm=data_manager.data_manager(	csr_train_feats=X_train,\
@@ -343,8 +436,6 @@ if DO_SEMI_SUPERVISED_LEARNING:
 					file_name_base=filename)
 			with open(filename+".pickle", "wb") as f:
 				pickle.dump(results,f,pickle.HIGHEST_PROTOCOL)
-
-	
 	if "lr_drs" in SEMI_SUPERVISED_RUNTYPES:
 		drs=[.1,.3,.5,.7,.9] #Dropout RateS
 		print "Y_train[:10]",Y_train[:10], Y_train.dtype
