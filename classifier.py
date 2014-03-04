@@ -9,7 +9,6 @@ import math
 import misc
 import numpy as np
 import itertools as it
-#import sys
 import sklearn as skl
 from sklearn import linear_model
 import sys
@@ -17,14 +16,39 @@ from scipy import sparse as sp
 
 classes_to_test={'perceptron_multilabel_classifier'} #{'perceptron_classifier'}
 
+class Classifier_DropoutRate_Bundle:
+	def __init__(self,classifier,dropout_rate,short_description):
+		assert isinstance(classifier,Classifier)
+		assert 0<=dropout_rate<1
+		self.cls=classifier
+		self.dr=dropout_rate
+		self.short_description=short_description
+		# self.bool_remove_features=bool_remove_features
+	def get_classifier(self):
+		return self.cls
+	def get_dr(self):
+		return self.dr
+	def get_description(self):
+		return self.short_description
+	# def get_bool_remove_features(self):
+	# 	return self.bool_remove_features
+	def set_classifier(self, classifier):
+		self.cls=classifier
+	def set_dropout_rate(self, dropout_rate):
+		self.dr=dropout_rate
+
+
+
 class Classifier:
 	def __init__(self):
-		assert(false) #this should be over-ridden in the subclasses
+		assert False #this should be over-ridden in the subclasses
+
+	def reset(self):
+		assert False
 
 	def train(self,X,Y, warm_start=True): #ABSTRACT CLASS!!!!! ABSTRACT CLASS!!!!!
 		"""This will train the classifier"""
-		sys.exit(1) #This should be implemented in the subclass
-		pass
+		assert False #This should be implemented in the subclass
 	
 	"""Functions that work on a single point"""
 	FUNCTIONS_THAT_WORK_ON_A_SINGLE_POINT=True
@@ -34,7 +58,7 @@ class Classifier:
 			estimating the confidence of this label prediction.
 
 			The rest of the 'predict' functions ultimately call this."""
-			sys.exit(1) #This should be implemented in the subclass
+			assert False #This should be implemented in the subclass
 			label, confidence=None,None
 			return (label, confidence)
 		def predict_label(self,x):
@@ -62,7 +86,7 @@ class Classifier:
 			return ls
 
 	def __str__(self): #ABSTRACT CLASS!!!!! ABSTRACT CLASS!!!!!
-		sys.exit(1) #This should be implemented in the subclass
+		assert False #This should be implemented in the subclass
 		#print something useful out!
 
 	def short_description(self):
@@ -79,11 +103,12 @@ class Averaged_Perceptron_Classifier(Classifier):
 
 		self.percep=None #set later
 		self.averaged_perceptron=None
-		self.__reset_perceptron__()
+		self.reset()
 		self.verbosity=verbosity
 
-	def __reset_perceptron__(self): #Not part of external interface
-		self.percep=linear_model.Perceptron(n_iter=1,warmb_start=True)
+
+	def reset(self): 
+		self.percep=linear_model.Perceptron(n_iter=1,warm_start=True)
 		self.averaged_perceptron=None
 
 	def train(self,X,Y, warm_start=True):
@@ -92,7 +117,7 @@ class Averaged_Perceptron_Classifier(Classifier):
 		u=np.unique(Y)
 		assert all(u==np.arange(1,len(u)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
 		if not warm_start: 
-			self.__reset_perceptron__()
+			self.reset()
 		samples=[]#[self.percep.coef_.copy()]
 		num_its=int(self.n_iter*len(Y)/self.sf)
 		for i in xrange(num_its):
@@ -143,7 +168,6 @@ class Averaged_Perceptron_Classifier(Classifier):
 		assert l==labels[r]
 		assert c==confidences[r]
 		return (labels, confidences)
-
 
 	def __str__(self):
 		my_str="num pts to train on between samples to use in average ="+str(self.sf)+\
@@ -304,9 +328,9 @@ class Perceptron_Classifier(Classifier):
 		assert verbosity in range(11)
 
 		self.percep=None #set later
-		self.__reset_perceptron__()
+		self.reset()
 
-	def __reset_perceptron__(self): #Not part of external interface
+	def reset(self): #Not part of external interface
 		self.percep=linear_model.Perceptron(n_iter=self.n_iter,warm_start=True)
 
 	def train(self,X,Y, warm_start=True):
@@ -315,7 +339,7 @@ class Perceptron_Classifier(Classifier):
 		u=np.unique(Y)
 		assert all(u==np.arange(1,len(u)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
 		if not warm_start: 
-			self.__reset_perceptron__()
+			self.reset()
 		self.percep.fit(X,Y)
 
 	def predict_label_and_confidence(self,x): 
@@ -440,9 +464,9 @@ class Logistic_Regression_Classifier(Classifier):
 
 			assert verbosity in range(11)
 			self.lr=None #set later
-			self.__reset_lr__()
+			self.reset()
 
-		def __reset_lr__(self): #Not part of external interface
+		def reset(self): #Not part of external interface
 			self.lr=linear_model.LogisticRegression(penalty=self.penalty, dual=self.dual, tol=self.tol, C=self.C, fit_intercept=self.fit_intercept, intercept_scaling=self.intercept_scaling, class_weight=self.class_weight, random_state=self.random_state)
 
 		def train(self,X,Y, warm_start=True):
@@ -451,7 +475,7 @@ class Logistic_Regression_Classifier(Classifier):
 			u=np.unique(Y)
 			assert all(u==np.arange(1,len(u)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
 			if not warm_start: 
-				self.__reset_lr__()
+				self.reset()
 			self.lr.fit(X,Y)
 
 		def predict_label_and_confidence(self,x): 
