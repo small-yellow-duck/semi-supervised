@@ -27,11 +27,13 @@ if USE_SYNTHETIC_DATA:
 else:
 	NUM_BETWEEN_SAMPLES=1000
 TEST_DATA_MANAGER=False
-DO_SEMI_SUPERVISED_LEARNING=True
+DO_SEMI_SUPERVISED_LEARNING=False
 #SEMI_SUPERVISED_RUNTYPES={"lr_drs","per_drs","per_ave_drs","per_ave_drs_long"}
 SEMI_SUPERVISED_RUNTYPES={"per_ave_drs_long"}
 DO_BASIC_CLASSIFICATION=not DO_SEMI_SUPERVISED_LEARNING
-LEARNERS_TO_USE={"Perceptron","perceptron_classifier","averaged_perceptron_classifier","LogisticRegression"}
+#LEARNERS_TO_USE={"Perceptron","perceptron_classifier","averaged_perceptron_classifier","LogisticRegression", "multilabel_perceptron_classifier"}
+LEARNERS_TO_USE={"perceptron_classifier", "multilabel_perceptron_classifier"}
+
 #DROPOUT_RATES
 #LEARNERS_TO_USE={"averaged_perceptron_classifier"}
 
@@ -179,7 +181,10 @@ if DO_BASIC_CLASSIFICATION:
 									dropout_rates={.2,.4,.6},\
 									max_num_dropout_corruptions_per_point=2\
 								)
-	(tr_X,tr_Y),tr_XU,(te_X,te_Y)=dm.get_data_only_random_dropout(.4,2)
+
+
+	#(tr_X,tr_Y),tr_XU,(te_X,te_Y)=dm.get_data_only_random_dropout(.4,2)
+	(tr_X,tr_Y),tr_XU,(te_X,te_Y) = dm.__get_data__(0,1,False)
 	if "Perceptron" in LEARNERS_TO_USE:
 		print "\nPerceptron"
 		p = linear_model.Perceptron() 
@@ -199,12 +204,19 @@ if DO_BASIC_CLASSIFICATION:
 		print "\nLogisticRegression"
 	if "perceptron_classifier" in LEARNERS_TO_USE:
 		print "\nperceptron_classifier"
-		p=classifier.perceptron_classifier(5)
+		p=classifier.Perceptron_Classifier(5)
+		print tr_X.shape, tr_Y.shape
 		p.train(tr_X, tr_Y)
 		print_train_and_test_error(p.predict_labels)
 	if "averaged_perceptron_classifier" in LEARNERS_TO_USE:
-		p=classifier.averaged_perceptron_classifier(5,NUM_BETWEEN_SAMPLES)
+		p=classifier.Averaged_Perceptron_Classifier(5,NUM_BETWEEN_SAMPLES)
 		print "\naveraged_perceptron_classifier"
+		p.train(tr_X, tr_Y)
+		print_train_and_test_error(p.predict_labels)
+
+	if "multilabel_perceptron_classifier" in LEARNERS_TO_USE:
+		p=classifier.Perceptron_Multilabel_Classifier(5)
+		print "\nmultilabel_perceptron_classifier"
 		p.train(tr_X, tr_Y)
 		print_train_and_test_error(p.predict_labels)
 	sys.exit(0)
