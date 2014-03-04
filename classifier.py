@@ -13,8 +13,9 @@ import itertools as it
 import sklearn as skl
 from sklearn import linear_model
 import sys
+from scipy import sparse as sp
 
-classes_to_test={'perceptron_classifier'}
+classes_to_test={'perceptron_multilabel_classifier'} #{'perceptron_classifier'}
 
 class Classifier:
 	def __init__(self):
@@ -68,6 +69,8 @@ class Classifier:
 		print "This should be implemented in the subclass!"
 		assert False
 
+
+
 class Averaged_Perceptron_Classifier(Classifier): 
 	def __init__(self,n_iter,sample_frequency_for_averaging,verbosity=5):
 		"""TODO - TODO - allow this to do averaging or not"""
@@ -80,7 +83,7 @@ class Averaged_Perceptron_Classifier(Classifier):
 		self.verbosity=verbosity
 
 	def __reset_perceptron__(self): #Not part of external interface
-		self.percep=linear_model.Perceptron(n_iter=1,warm_start=True)
+		self.percep=linear_model.Perceptron(n_iter=1,warmb_start=True)
 		self.averaged_perceptron=None
 
 	def train(self,X,Y, warm_start=True):
@@ -153,7 +156,124 @@ class Averaged_Perceptron_Classifier(Classifier):
 		return "ave_per"+str(self.n_iter)+","+str(self.sf)
 
 
-if __name__=="__main__" and 'averaged_perceptron_classifier' in classes_to_test:
+
+
+class Perceptron_Multilabel_Classifier(Classifier): 
+	def __init__(self,n_iter,verbosity=5):
+		self.n_iter=n_iter #The number of passes through the data before the next update
+		self.verbosity=verbosity
+		assert verbosity in range(11)
+
+		#perceptron matrix	
+		self.percep_mat=None #set later
+
+		self.labels = None
+		self.best_label = None
+		self.best_index = None
+		self.correct_label = None
+		self.numlabels = 0
+		self.numsamples = 0
+
+		self.__reset_perceptron__(self.numlabels, self.numsamples)
+
+		self.initialized = False
+
+
+
+	def __reset_perceptron__(self, numlabels, numsamples): #Not part of external interface
+		#self.percep=linear_model.Perceptron(n_iter=self.n_iter,warm_start=True)
+		self.percep_mat = np.zeros((numlabels, numsamples))
+
+
+
+	def train(self,X,Y, warm_start=True):
+		"""This will train the classifier"""
+		assert X.shape[0]==len(Y)
+		labels=np.unique(Y)
+		assert all(labels==np.arange(1,len(labels)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
+		
+		
+
+		if not self.initialized:
+			self.percep_mat = np.zeros((len(labels), X.shape[1]))
+			self.initialized = True		
+
+		if not warm_start: 
+			self.__reset_perceptron__(labels, X.shape[1])
+
+		assert self.percep_mat.shape[0] == len(labels)	
+		assert self.percep_mat.shape[1] == X.shape[1]
+		
+
+		#randomize the rows of X
+		idx = range(0, X.shape[0])
+		random.shuffle(idx)
+
+
+		for i in idx:
+
+			#sums = np.dot(X[i,:], self.percep.T)
+			sums = sp.csr_matrix.dot(X[i,:], self.percep_mat.T)
+			
+			best_index = np.argmax(sums)	
+			best_label = best_index+1  #plus 1 because labels are [1...N] not [0..N-1]
+			
+			correct_index = Y[i] - 1
+
+			if best_label != Y[i]:
+				#updata perceptron matrix
+				self.percep_mat[best_index,:] -=  X[i,:]	
+				self.percep_mat[correct_index,:] +=  X[i,:]
+
+	def predict_labels_and_confidences(self,X):
+		n=X.shape[0]
+		#scores = np.dot(X[:,:], self.percep.T)
+		scores = sp.csr_matrix.dot(X, self.percep_mat.T)
+		sortedscores = np.argsort(scores, axis=1)
+		ind1 = sortedscores[:,-1]
+		ind2 = sortedscores[:,-2]
+		
+
+		labels = ind1 + 1
+
+		assert scores.shape[0]==n
+		c1 = scores[:,ind1]
+		c2 = scores[:,ind2]
+
+		confidence = c1 - c2
+
+		def print_stuff():
+			# print "X", X
+			# print "scores", scores
+			print "ind1", ind1
+			print "ind2", ind2
+			print "labels", labels		
+			print "confidence",confidence
+			
+
+		if self.verbosity>6: print_stuff()
+		
+		return (labels, confidence)
+
+	def predict_labels(self,X):
+		#labels = np.argmax(np.dot(X[:,:], self.percep.T), axis=1) +1
+		labels = np.argmax(sp.csr_matrix.dot(X, self.percep_mat.T), axis=1) +1
+		
+		return labels
+
+	def __str__(self):
+		my_str=",  number of passes through the data =" + str(self.n_iter)
+			
+		return my_str
+
+	def short_description(self):
+		return "per"+str(self.n_iter)
+
+
+
+
+
+if __name__=="__main__" and 'perceptron_multilabel_classifier' in classes_to_test:
 	
 	(train_X,train_Y),(test_X,test_Y)=\
 		misc.create_synthetic_data(	num_labels=4,\
@@ -165,33 +285,17 @@ if __name__=="__main__" and 'averaged_perceptron_classifier' in classes_to_test:
 									skew=2,\
 									rand_seed=0)
 	#print (train_X,train_Y),(test_X,test_Y)
-	p=averaged_perceptron_classifier(1,5)
+	#p=averaged_perceptron_classifier(1,5)
+	p=Perceptron_Multilabel_Classifier(1,5)
 	p.train(train_X,train_Y)
 	# p.predict_label_and_confidence(train_X[0])
 	# p.predict_label_and_confidence(train_X[1])
 	# p.predict_label_and_confidence(train_X[2])
 	labels, confidences = p.predict_labels_and_confidences(train_X)
-	lab_theirs=p.percep.predict(train_X)
-	print "Train averaged perceptron: {:.2%} correct".format(sum(labels==train_Y)/len(labels))
-	print "Train perceptron: {:.2%}={:.2%} correct".format(p.percep.score(train_X, train_Y),sum(lab_theirs==train_Y)/len(labels))
-	print "np.column_stack((labels, confidences, train_Y, correct?, lab_theirs, correct?, ours and theirs same?)):\n",\
-		np.column_stack((labels, confidences, train_Y, labels==train_Y,lab_theirs,lab_theirs==train_Y,lab_theirs==labels))[:50]
-
-	labels, confidences = p.predict_labels_and_confidences(test_X)
-	lab_theirs=p.percep.predict(test_X)
-	print "Test: {:.2%} correct".format(sum(labels==test_Y)/len(labels))
-	print "np.column_stack((labels, confidences, test_Y, correct?, lab_theirs, correct?, ours and theirs same?)):\n",\
-		np.column_stack((labels, confidences, test_Y, labels==test_Y,lab_theirs,lab_theirs==test_Y,lab_theirs==labels))[:50]
+	lab_theirs=p.predict_labels(train_X)
+	print "Train multi-label perceptron: {:.2%} correct".format(np.mean(labels==train_Y))
 
 
-	labels, confidences = p.predict_labels_and_confidences(train_X)
-	print "Train averaged perceptron: {:.2%} correct".format(sum(labels==train_Y)/len(labels))
-	print "Train perceptron: {:.2%} correct".format(p.percep.score(train_X, train_Y))
-	print p
-	p.averaged_perceptron=p.percep.coef_.copy()
-	labels, confidences = p.predict_labels_and_confidences(train_X)
-	print "Train perceptron from my class: {:.2%} correct".format(sum(labels==train_Y)/len(labels))
-	print p
 
 class Perceptron_Classifier(Classifier): 
 	def __init__(self,n_iter,verbosity=5):
