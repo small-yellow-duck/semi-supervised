@@ -10,6 +10,7 @@ import numpy as np
 import data_manager
 from sklearn import linear_model
 import classifier
+import shutil
 # from sklearn.ensemble import RandomForestClassifier 
 
 # from sklearn.preprocessing import normalize
@@ -27,8 +28,8 @@ else:
 	NUM_BETWEEN_SAMPLES=1000
 TEST_DATA_MANAGER=False
 DO_SEMI_SUPERVISED_LEARNING=True
-#SEMI_SUPERVISED_RUNTYPES={"lr_drs","per_drs","per_ave_drs"}
-SEMI_SUPERVISED_RUNTYPES={"per_drs"}
+#SEMI_SUPERVISED_RUNTYPES={"lr_drs","per_drs","per_ave_drs","per_ave_drs_long"}
+SEMI_SUPERVISED_RUNTYPES={"per_ave_drs_long"}
 DO_BASIC_CLASSIFICATION=not DO_SEMI_SUPERVISED_LEARNING
 LEARNERS_TO_USE={"Perceptron","perceptron_classifier","averaged_perceptron_classifier","LogisticRegression"}
 #DROPOUT_RATES
@@ -234,12 +235,15 @@ def graph(list_of_tuples_of_Val_X_and_Y_arrays,Val_description,x_label,file_name
 	plt.xlim(min_x,max_x)
 	plt.ylim(0,max_y)
 	plt.legend(loc="lower right",prop={'size':6})
-	plt.savefig(file_name+".png")
+	file_name_fig=file_name_base+".png"
+	plt.savefig(file_name_fig)
 	#savefig(file_name,dpi=72)
 	print "NEW PLOTS SAVED!"
-	with open(file_name+".pickle","wb") as f:
+	file_name_pickle=file_name+"_graph.pickle"
+	with open(file_name_pickle,"wb") as f:
 		pickle.dump((list_of_tuples_of_Val_X_and_Y_arrays,Val_description,x_label,file_name_base),f,pickle.HIGHEST_PROTOCOL)
 	print "RESULTS PICKLED!"
+	return [file_name_fig,file_name_pickle]
 
 import datetime
 def run_then_graph_semi_supervised_learning_set(data_manager,dict_diff_from_defaults,list_of_dicts_of_run_specific_values,runs_description="DEFAULT"):
@@ -270,6 +274,7 @@ def run_then_graph_semi_supervised_learning_set(data_manager,dict_diff_from_defa
 			ss_params[key]=dict_params[key]
 	change_params(dict_diff_from_defaults)
 	rtg=[] #Results To Graph
+	results_files=[]
 	for d in list_of_dicts_of_run_specific_values:
 		change_params(d)
 		ss_params["ssl_Classifier_DropoutRate_Bundle"].get_classifier().reset()
@@ -299,12 +304,18 @@ def run_then_graph_semi_supervised_learning_set(data_manager,dict_diff_from_defa
 							"_dr"+str(ss_params["ssl_Classifier_DropoutRate_Bundle"].get_dr())+\
 							"_nc"+str(ss_params["num_corruptions_per_data_point"])+\
 							"_mlf"+str(ss_params["max_labelled_frac"])
-		graph(	list_of_tuples_of_Val_X_and_Y_arrays=rtg,\
-						Val_description="Dropout Rate",\
-						x_label='num_labelled',\
-						file_name_base=filename)
-		with open(filename+".pickle", "wb") as f:
+		graph_results_files = graph(	list_of_tuples_of_Val_X_and_Y_arrays=rtg,\
+																	Val_description="Dropout Rate",\
+																	x_label='num_labelled',\
+																	file_name_base=filename)
+		pickle_results_file=filename+".pickle"
+		with open(pickle_results_file, "wb") as f:
 			pickle.dump(results,f,pickle.HIGHEST_PROTOCOL)
+		'''Make sure only the latest results are left in the main folder:'''
+		print "results_files",results_files
+		for f in results_files:
+			shutil.move('./'+f,"./Results")
+		results_files=graph_results_files+[pickle_results_file]
 
 if DO_SEMI_SUPERVISED_LEARNING:
 	drs=[.1,.3,.5,.7,.9] #Dropout RateS
@@ -327,9 +338,25 @@ if DO_SEMI_SUPERVISED_LEARNING:
 				d["ssl_Classifier_DropoutRate_Bundle"]=classifier.Classifier_DropoutRate_Bundle(p,dr)
 				d["run_description"]="dr"+str(dr)
 				list_of_dicts_of_run_specific_values.append(d)
+		if runtype=="per_ave_drs":
+			p=classifier.Averaged_Perceptron_Classifier(1,1000)
+			for dr in drs:
+				d={}
+				d["ssl_Classifier_DropoutRate_Bundle"]=classifier.Classifier_DropoutRate_Bundle(p,dr)
+				d["run_description"]="dr"+str(dr)
+				list_of_dicts_of_run_specific_values.append(d)
+		if runtype=="per_ave_drs_long":
+			p=classifier.Averaged_Perceptron_Classifier(1,1000)
+			for dr in drs:
+				d={}
+				d["ssl_Classifier_DropoutRate_Bundle"]=classifier.Classifier_DropoutRate_Bundle(p,dr)
+				d["run_description"]="dr"+str(dr)
+				list_of_dicts_of_run_specific_values.append(d)
+			dict_diff_from_defaults["num_to_add_each_iteration"]=500
+			dict_diff_from_defaults["num_corruptions_per_data_point"]=10
 
 		run_then_graph_semi_supervised_learning_set(data_manager=dm,\
-																						dict_diff_from_defaults={},\
+																						dict_diff_from_defaults=dict_diff_from_defaults,\
 																						list_of_dicts_of_run_specific_values=list_of_dicts_of_run_specific_values,\
 																						runs_description=runtype)
 	sys.exit(0)

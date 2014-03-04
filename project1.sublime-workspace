@@ -4,6 +4,14 @@
 		"selected_items":
 		[
 			[
+				"dic",
+				"dict_params"
+			],
+			[
+				"ss",
+				"ss_params"
+			],
+			[
 				"dr",
 				"dropout_rate"
 			],
@@ -95,15 +103,7 @@
 			"file": "run_perceptron_2014_02_16.py",
 			"settings":
 			{
-				"buffer_size": 13339,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "classifier.py",
-			"settings":
-			{
-				"buffer_size": 14944,
+				"buffer_size": 13670,
 				"line_ending": "Windows"
 			}
 		},
@@ -111,7 +111,15 @@
 			"file": "semi_supervised_learner.py",
 			"settings":
 			{
-				"buffer_size": 4936,
+				"buffer_size": 5474,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "classifier.py",
+			"settings":
+			{
+				"buffer_size": 15097,
 				"line_ending": "Windows"
 			}
 		}
@@ -191,7 +199,7 @@
 	],
 	"find":
 	{
-		"height": 35.0
+		"height": 30.0
 	},
 	"find_in_files":
 	{
@@ -206,6 +214,34 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"bool_remove_features",
+			"self.bool_remove_features",
+			"short_description",
+			"label_counts",
+			"record_results",
+			"results",
+			"Results",
+			"results",
+			"set_test_set_Classifier_DropoutRate_Bundles",
+			"dict_test_set_Classifier_DropoutRate_Bundles",
+			"get_error",
+			"num_labels_tot",
+			"num_labels_added",
+			"num_labels_orig",
+			"__reset_perceptron__",
+			"False",
+			"false",
+			"pickle",
+			"shutil",
+			"filename",
+			"__reset_lr__",
+			"run_then_graph_semi_supervised_learning",
+			"dict_diff_from_defaults",
+			"assert(false)",
+			"file_name_base",
+			"=",
+			",",
+			"dict_test_set_Classifier_DropoutRate_Bundles",
 			"lr_drs",
 			"self.random_drop_out_rate",
 			"get_dr",
@@ -305,35 +341,7 @@
 			"type",
 			"array_to_kron_with.dtype",
 			"tot_train_pts",
-			"num_unlabelled",
-			"num_excluded",
-			"num_labelled_tot",
-			"num_added_labels",
-			"num_labelled_initially",
-			"get_kron_array",
-			"__get_data__",
-			"PICKLE_DATA_MANAGER",
-			"get_kron_matrix",
-			"column",
-			"row,column",
-			"test_labels",
-			"sys",
-			"ignor",
-			"of",
-			"feats",
-			"several",
-			"MY PREDICTION DIFFERS FROM THE PERCEPTRONS",
-			"test_Y",
-			"train_Y",
-			"test_X",
-			"train_X",
-			".shape",
-			"train",
-			"Train",
-			"run_checks",
-			"get_num_train",
-			"train",
-			"\\"
+			"num_unlabelled"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -352,7 +360,7 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -383,7 +391,7 @@
 							"word_wrap": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 66.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 3,
@@ -395,7 +403,7 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 13339,
+						"buffer_size": 13670,
 						"regions":
 						{
 							"bookmark_c":
@@ -404,8 +412,8 @@
 								"regions":
 								[
 									[
-										344,
-										344
+										358,
+										358
 									]
 								]
 							},
@@ -415,8 +423,8 @@
 								"regions":
 								[
 									[
-										7845,
-										7845
+										13410,
+										13410
 									]
 								]
 							}
@@ -424,8 +432,8 @@
 						"selection":
 						[
 							[
-								12125,
-								12125
+								11871,
+								11871
 							]
 						],
 						"settings":
@@ -436,7 +444,36 @@
 							"word_wrap": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 5093.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "semi_supervised_learner.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5474,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2186,
+								2186
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
@@ -449,12 +486,12 @@
 			"sheets":
 			[
 				{
-					"buffer": 2,
+					"buffer": 3,
 					"file": "classifier.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 14944,
+						"buffer_size": 15097,
 						"regions":
 						{
 							"bookmark_a":
@@ -463,8 +500,8 @@
 								"regions":
 								[
 									[
-										2585,
-										2585
+										2850,
+										2850
 									]
 								]
 							},
@@ -474,8 +511,8 @@
 								"regions":
 								[
 									[
-										758,
-										758
+										994,
+										994
 									]
 								]
 							},
@@ -485,8 +522,8 @@
 								"regions":
 								[
 									[
-										7678,
-										7678
+										7897,
+										7897
 									]
 								]
 							},
@@ -497,16 +534,16 @@
 								"regions":
 								[
 									[
-										758,
-										758
+										994,
+										994
 									],
 									[
-										2585,
-										2585
+										2850,
+										2850
 									],
 									[
-										7678,
-										7678
+										7897,
+										7897
 									]
 								],
 								"scope": "bookmarks"
@@ -515,8 +552,8 @@
 						"selection":
 						[
 							[
-								260,
-								260
+								652,
+								666
 							]
 						],
 						"settings":
@@ -532,42 +569,13 @@
 					},
 					"stack_index": 1,
 					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "semi_supervised_learner.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4936,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								558,
-								558
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 7.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
 				}
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 35.0
+		"height": 30.0
 	},
 	"input":
 	{
@@ -593,7 +601,7 @@
 		"cols":
 		[
 			0.0,
-			0.5,
+			0.614101184069,
 			1.0
 		],
 		"rows":
@@ -614,7 +622,7 @@
 	"project": "project1.sublime-project",
 	"replace":
 	{
-		"height": 50.0
+		"height": 56.0
 	},
 	"save_all_on_build": true,
 	"select_file":

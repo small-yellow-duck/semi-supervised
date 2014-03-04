@@ -16,15 +16,21 @@ import sys
 classes_to_test={'perceptron_classifier'}
 
 class Classifier_DropoutRate_Bundle:
-	def __init__(self,classifier,dropout_rate):
+	def __init__(self,classifier,dropout_rate,short_description):
 		assert isinstance(classifier,Classifier)
 		assert 0<=dropout_rate<1
 		self.cls=classifier
 		self.dr=dropout_rate
+		self.short_description=short_description
+		# self.bool_remove_features=bool_remove_features
 	def get_classifier(self):
 		return self.cls
 	def get_dr(self):
 		return self.dr
+	def get_description(self):
+		return self.short_description
+	# def get_bool_remove_features(self):
+	# 	return self.bool_remove_features
 	def set_classifier(self, classifier):
 		self.cls=classifier
 	def set_dropout_rate(self, dropout_rate):
@@ -34,14 +40,14 @@ class Classifier_DropoutRate_Bundle:
 
 class Classifier:
 	def __init__(self):
-		assert false #this should be over-ridden in the subclasses
+		assert False #this should be over-ridden in the subclasses
 
 	def reset(self):
-		assert false
+		assert False
 
 	def train(self,X,Y, warm_start=True): #ABSTRACT CLASS!!!!! ABSTRACT CLASS!!!!!
 		"""This will train the classifier"""
-		assert false #This should be implemented in the subclass
+		assert False #This should be implemented in the subclass
 	
 	"""Functions that work on a single point"""
 	FUNCTIONS_THAT_WORK_ON_A_SINGLE_POINT=True
@@ -51,7 +57,7 @@ class Classifier:
 			estimating the confidence of this label prediction.
 
 			The rest of the 'predict' functions ultimately call this."""
-			assert false #This should be implemented in the subclass
+			assert False #This should be implemented in the subclass
 			label, confidence=None,None
 			return (label, confidence)
 		def predict_label(self,x):
@@ -94,10 +100,10 @@ class Averaged_Perceptron_Classifier(Classifier):
 
 		self.percep=None #set later
 		self.averaged_perceptron=None
-		self.__reset_perceptron__()
+		self.reset()
 		self.verbosity=verbosity
 
-	def __reset_perceptron__(self): #Not part of external interface
+	def reset(self): #Not part of external interface
 		self.percep=linear_model.Perceptron(n_iter=1,warm_start=True)
 		self.averaged_perceptron=None
 
@@ -107,7 +113,7 @@ class Averaged_Perceptron_Classifier(Classifier):
 		u=np.unique(Y)
 		assert all(u==np.arange(1,len(u)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
 		if not warm_start: 
-			self.__reset_perceptron__()
+			self.reset()
 		samples=[]#[self.percep.coef_.copy()]
 		num_its=int(self.n_iter*len(Y)/self.sf)
 		for i in xrange(num_its):
