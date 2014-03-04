@@ -198,13 +198,13 @@ class Perceptron_Multilabel_Classifier(Classifier):
 		self.numlabels = 0
 		self.numsamples = 0
 
-		self.__reset_perceptron__(self.numlabels, self.numsamples)
+		self.reset(self.numlabels, self.numsamples)
 
 		self.initialized = False
 
 
 
-	def __reset_perceptron__(self, numlabels, numsamples): #Not part of external interface
+	def reset(self, numlabels, numsamples): #Not part of external interface
 		#self.percep=linear_model.Perceptron(n_iter=self.n_iter,warm_start=True)
 		self.percep_mat = np.zeros((numlabels, numsamples))
 
@@ -223,7 +223,7 @@ class Perceptron_Multilabel_Classifier(Classifier):
 			self.initialized = True		
 
 		if not warm_start: 
-			self.__reset_perceptron__(labels, X.shape[1])
+			self.reset(labels, X.shape[1])
 
 		assert self.percep_mat.shape[0] == len(labels)	
 		assert self.percep_mat.shape[1] == X.shape[1]
@@ -245,7 +245,8 @@ class Perceptron_Multilabel_Classifier(Classifier):
 			correct_index = Y[i] - 1
 
 			if best_label != Y[i]:
-				#updata perceptron matrix
+				#update perceptron matrix
+				'''DEBUG - The compiler says this type-casting is unsafe, because it will be deprecated'''
 				self.percep_mat[best_index,:] -=  X[i,:]	
 				self.percep_mat[correct_index,:] +=  X[i,:]
 
