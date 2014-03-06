@@ -32,7 +32,7 @@ DO_SEMI_SUPERVISED_LEARNING=False
 SEMI_SUPERVISED_RUNTYPES={"per_ave_drs_long"}
 DO_BASIC_CLASSIFICATION=not DO_SEMI_SUPERVISED_LEARNING
 #LEARNERS_TO_USE={"Perceptron","perceptron_classifier","averaged_perceptron_classifier","LogisticRegression", "multilabel_perceptron_classifier"}
-LEARNERS_TO_USE={"perceptron_classifier", "multilabel_perceptron_classifier"}
+LEARNERS_TO_USE={"perceptron_classifier", "multilabel_perceptron_classifier", "averaged_multilabel_perceptron_classifier"}
 
 #DROPOUT_RATES
 #LEARNERS_TO_USE={"averaged_perceptron_classifier"}
@@ -219,6 +219,12 @@ if DO_BASIC_CLASSIFICATION:
 		print "\nmultilabel_perceptron_classifier"
 		p.train(tr_X, tr_Y)
 		print_train_and_test_error(p.predict_labels)
+
+	if "averaged_multilabel_perceptron_classifier" in LEARNERS_TO_USE:
+		p=classifier.Averaged_Perceptron_Multilabel_Classifier(5)
+		print "\naveraged_multilabel_perceptron_classifier"
+		p.train(tr_X, tr_Y)
+		print_train_and_test_error(p.predict_labels)		
 	sys.exit(0)
 
 import matplotlib.pyplot as plt

@@ -14,7 +14,7 @@ from sklearn import linear_model
 import sys
 from scipy import sparse as sp
 
-classes_to_test={'perceptron_multilabel_classifier'} #{'perceptron_classifier'}
+classes_to_test={'averaged_perceptron_multilabel_classifier'} #{'perceptron_classifier'}
 
 class Classifier_DropoutRate_Bundle:
 	def __init__(self,classifier,dropout_rate,short_description):
@@ -96,9 +96,9 @@ class Classifier:
 
 
 class Averaged_Perceptron_Classifier(Classifier): 
-	def __init__(self,n_iter,sample_frequency_for_averaging,verbosity=5):
+	def __init__(self,passes,sample_frequency_for_averaging,verbosity=5):
 		"""TODO - TODO - allow this to do averaging or not"""
-		self.n_iter=n_iter #The number of passes through the data before the next update
+		self.passes=passes #The number of passes through the data before the next update
 		self.sf=sample_frequency_for_averaging #The number of points to train on between samples used for the averaged perceptron
 
 		self.percep=None #set later
@@ -108,7 +108,7 @@ class Averaged_Perceptron_Classifier(Classifier):
 
 
 	def reset(self): 
-		self.percep=linear_model.Perceptron(n_iter=1,warm_start=True)
+		self.percep=linear_model.Perceptron(passes=1,warm_start=True)
 		self.averaged_perceptron=None
 
 	def train(self,X,Y, warm_start=True):
@@ -119,9 +119,9 @@ class Averaged_Perceptron_Classifier(Classifier):
 		if not warm_start: 
 			self.reset()
 		samples=[]#[self.percep.coef_.copy()]
-		num_its=int(self.n_iter*len(Y)/self.sf)
+		num_its=int(self.passes*len(Y)/self.sf)
 		for i in xrange(num_its):
-			if self.verbosity>6: print "in averaged_perceptron_classifier.train,",i*self.sf,"of",self.n_iter*len(Y),"points trained on (with duplication)"
+			if self.verbosity>6: print "in averaged_perceptron_classifier.train,",i*self.sf,"of",self.passes*len(Y),"points trained on (with duplication)"
 			ind=np.zeros(1,dtype=int) #Need to set data type to int b/c using as index!
 			ui=np.unique(Y[ind])
 			num_failed_samples=-1
@@ -171,20 +171,18 @@ class Averaged_Perceptron_Classifier(Classifier):
 
 	def __str__(self):
 		my_str="num pts to train on between samples to use in average ="+str(self.sf)+\
-			",  number of passes through the data =" + str(self.n_iter)+\
+			",  number of passes through the data =" + str(self.passes)+\
 			",  percep values =\n"+str(self.percep.coef_)+\
 			",  Ave percep values =\n"+str(self.averaged_perceptron)
 		return my_str
 
 	def short_description(self):
-		return "ave_per"+str(self.n_iter)+","+str(self.sf)
+		return "ave_per"+str(self.passes)+","+str(self.sf)
 
+class Averaged_Perceptron_Multilabel_Classifier(Classifier): 
+	def __init__(self,passes,verbosity=5):
+		self.passes=passes #The number of passes through the data before the next update
 
-
-
-class Perceptron_Multilabel_Classifier(Classifier): 
-	def __init__(self,n_iter,verbosity=5):
-		self.n_iter=n_iter #The number of passes through the data before the next update
 		self.verbosity=verbosity
 		assert verbosity in range(11)
 
@@ -192,21 +190,14 @@ class Perceptron_Multilabel_Classifier(Classifier):
 		self.percep_mat=None #set later
 
 		self.labels = None
-		self.best_label = None
-		self.best_index = None
-		self.correct_label = None
-		self.numlabels = 0
-		self.numsamples = 0
+		self.confidence = None
 
-		self.reset(self.numlabels, self.numsamples)
-
-		self.initialized = False
+		self.reset()
 
 
 
-	def reset(self, numlabels, numsamples): #Not part of external interface
-		#self.percep=linear_model.Perceptron(n_iter=self.n_iter,warm_start=True)
-		self.percep_mat = np.zeros((numlabels, numsamples))
+	def reset(self): #Not part of external interface
+		self.percep_mat = None
 
 
 
@@ -216,23 +207,168 @@ class Perceptron_Multilabel_Classifier(Classifier):
 		labels=np.unique(Y)
 		assert all(labels==np.arange(1,len(labels)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
 		
+		if not warm_start: 
+			self.reset()
+
+		if self.percep_mat == None:
+			self.percep_mat = np.zeros((len(labels), X.shape[1]))
+				
+		assert self.percep_mat.shape[0] == len(labels)	
+		assert self.percep_mat.shape[1] == X.shape[1]
+		
+		mean_percep_mat = np.zeros((len(labels), X.shape[1]))
+
+		lastupdated = np.zeros(np.int(X.shape[0]*self.passes))
+
+		#randomize the rows of X
+		#idx = range(0, X.shape[0])
+		#random.shuffle(idx)
+
+		idx = np.random.randint(0, X.shape[0], np.int(self.passes*X.shape[0]))
+		j = 0
+
+		for i in idx:
+
+			#sums = np.dot(X[i,:], self.percep.T)
+			sums = sp.csr_matrix.dot(X[i,:], self.percep_mat.T)
+			
+			best_index = np.argmax(sums)	
+			best_label = best_index+1  #plus 1 because labels are [1...N] not [0..N-1]
+			
+			correct_index = Y[i] - 1
+
+			if best_label != Y[i]:
+				#update perceptron matrix
+				'''DEBUG - The compiler says this type-casting is unsafe, because it will be deprecated'''
+				mean_percep_mat[best_index,:] += (j-lastupdated[best_index])*self.percep_mat[best_index,:]
+				mean_percep_mat[correct_index, :] += (j-lastupdated[correct_index])*self.percep_mat[correct_index,:]
+
+				self.percep_mat[best_index,:] -=  X[i,:]	
+				self.percep_mat[correct_index,:] +=  X[i,:]
+
+				lastupdated[best_index] = j
+				lastupdated[correct_index] = j
+
+			j = j+1
+
+		#do final update for mean_percept_mat
+		for l in range(len(labels)):
+			mean_percep_mat[l,:] += (j-lastupdated[l])*self.percep_mat[l,:]
+
+		self.percep_mat = mean_percep_mat	
+
+
+	def predict_labels_and_confidences(self,X):
+		n=X.shape[0]
+		#scores = np.dot(X[:,:], self.percep.T)
+		scores = sp.csr_matrix.dot(X, self.percep_mat.T)
+		sortedscores = np.argsort(scores, axis=1)
+		ind1 = sortedscores[:,-1]
+		ind2 = sortedscores[:,-2]
 		
 
-		if not self.initialized:
-			self.percep_mat = np.zeros((len(labels), X.shape[1]))
-			self.initialized = True		
+		self.labels = ind1 + 1
 
+		assert scores.shape[0]==n
+		c1 = scores[:,ind1]
+		c2 = scores[:,ind2]
+
+		confidence = c1 - c2
+
+		def print_stuff():
+			# print "X", X
+			# print "scores", scores
+			print "ind1", ind1
+			print "ind2", ind2
+			print "labels", self.labels		
+			print "confidence",self.confidence
+			
+
+		if self.verbosity>6: print_stuff()
+		
+		return (self.labels, self.confidence)
+
+	def predict_labels(self,X):
+		#labels = np.argmax(np.dot(X[:,:], self.percep.T), axis=1) +1
+		self.labels = np.argmax(sp.csr_matrix.dot(X, self.percep_mat.T), axis=1) +1
+		
+		return self.labels
+
+	def __str__(self):
+		my_str=",  number of passes through the data =" + str(self.passes)
+			
+		return my_str
+
+	def short_description(self):
+		return "per"+str(self.passes)
+
+if __name__=="__main__" and 'averaged_perceptron_multilabel_classifier' in classes_to_test:
+	
+	(train_X,train_Y),(test_X,test_Y)=\
+		misc.create_synthetic_data(	num_labels=4,\
+									num_train=20,\
+									num_feats=10,\
+									frac_labelled=1,\
+									num_test=20,\
+									sparsity=2,\
+									skew=2,\
+									rand_seed=0)
+	#print (train_X,train_Y),(test_X,test_Y)
+	#p=averaged_perceptron_classifier(1,5)
+	p=Averaged_Perceptron_Multilabel_Classifier(1,5)
+	p.train(train_X,train_Y)
+	# p.predict_label_and_confidence(train_X[0])
+	# p.predict_label_and_confidence(train_X[1])
+	# p.predict_label_and_confidence(train_X[2])
+	labels, confidences = p.predict_labels_and_confidences(train_X)
+	lab_theirs=p.predict_labels(train_X)
+	print "Train averaged multi-label perceptron: {:.2%} correct".format(np.mean(labels==train_Y))
+
+class Perceptron_Multilabel_Classifier(Classifier): 
+	def __init__(self,passes,verbosity=5):
+		self.passes=passes #The number of passes through the data before the next update
+		self.verbosity=verbosity
+		assert verbosity in range(11)
+
+		#perceptron matrix	
+		self.percep_mat=None #set later
+
+		self.labels = None
+		# self.best_label = None
+		# self.best_index = None
+		# self.correct_label = None
+		# self.numlabels = 0
+		# self.numsamples = 0
+
+		self.reset()
+
+
+	def reset(self): #Not part of external interface
+		#self.percep=linear_model.Perceptron(passes=self.passes,warm_start=True)
+		self.percep_mat = None
+
+
+	def train(self,X,Y, warm_start=True):
+		"""This will train the classifier"""
+		assert X.shape[0]==len(Y)
+		labels=np.unique(Y)
+		assert all(labels==np.arange(1,len(labels)+1)) #Y should contain labels from 1 to n with no breaks, otherwise this code might not work!
+		
 		if not warm_start: 
-			self.reset(labels, X.shape[1])
+			self.reset()
 
+		if self.percep_mat == None:
+			self.percep_mat = np.zeros((len(labels), X.shape[1]))
+				
 		assert self.percep_mat.shape[0] == len(labels)	
 		assert self.percep_mat.shape[1] == X.shape[1]
 		
 
 		#randomize the rows of X
-		idx = range(0, X.shape[0])
-		random.shuffle(idx)
+		#idx = range(0, X.shape[0])
+		#random.shuffle(idx)
 
+		idx = np.random.randint(0, X.shape[0], np.int(self.passes*X.shape[0]))
 
 		for i in idx:
 
@@ -251,7 +387,7 @@ class Perceptron_Multilabel_Classifier(Classifier):
 				self.percep_mat[correct_index,:] +=  X[i,:]
 
 	def predict_labels_and_confidences(self,X):
-		n=X.shape[0]
+	
 		#scores = np.dot(X[:,:], self.percep.T)
 		scores = sp.csr_matrix.dot(X, self.percep_mat.T)
 		sortedscores = np.argsort(scores, axis=1)
@@ -260,10 +396,13 @@ class Perceptron_Multilabel_Classifier(Classifier):
 		
 
 		labels = ind1 + 1
+		if random.random()<.05:
+			l = self.predict_labels(X)
+			assert all(l==labels)
 
-		assert scores.shape[0]==n
-		c1 = scores[:,ind1]
-		c2 = scores[:,ind2]
+		assert scores.shape[0]==X.shape[0]
+		c1 = scores[np.arange(scores.shape[0]),ind1]
+		c2 = scores[np.arange(scores.shape[0]),ind2]
 
 		confidence = c1 - c2
 
@@ -287,12 +426,12 @@ class Perceptron_Multilabel_Classifier(Classifier):
 		return labels
 
 	def __str__(self):
-		my_str=",  number of passes through the data =" + str(self.n_iter)
+		my_str=",  number of passes through the data =" + str(self.passes)
 			
 		return my_str
 
 	def short_description(self):
-		return "per"+str(self.n_iter)
+		return "per"+str(self.passes)
 
 
 
@@ -323,8 +462,8 @@ if __name__=="__main__" and 'perceptron_multilabel_classifier' in classes_to_tes
 
 
 class Perceptron_Classifier(Classifier): 
-	def __init__(self,n_iter,verbosity=5):
-		self.n_iter=n_iter #The number of passes through the data before the next update
+	def __init__(self,passes,verbosity=5):
+		self.passes=passes #The number of passes through the data before the next update
 		self.verbosity=verbosity
 		assert verbosity in range(11)
 
@@ -332,7 +471,7 @@ class Perceptron_Classifier(Classifier):
 		self.reset()
 
 	def reset(self): #Not part of external interface
-		self.percep=linear_model.Perceptron(n_iter=self.n_iter,warm_start=True)
+		self.percep=linear_model.Perceptron(n_iter=self.passes,warm_start=True)
 
 	def train(self,X,Y, warm_start=True):
 		"""This will train the classifier"""
@@ -400,12 +539,12 @@ class Perceptron_Classifier(Classifier):
 		labels=self.percep.predict(X)
 		return labels
 	def __str__(self):
-		my_str=",  number of passes through the data =" + str(self.n_iter)+\
+		my_str=",  number of passes through the data =" + str(self.passes)+\
 			"\n,  percep values =\n"+str(self.percep.coef_)
 		return my_str
 
 	def short_description(self):
-		return "per"+str(self.n_iter)
+		return "per"+str(self.passes)
 
 if __name__=="__main__" and 'perceptron_classifier' in classes_to_test:
 	
@@ -532,7 +671,7 @@ class Logistic_Regression_Classifier(Classifier):
 			labels=self.lr.predict(X)
 			return labels
 		def __str__(self):
-			my_str=",  number of passes through the data =" + str(self.n_iter)+\
+			my_str=",  number of passes through the data =" + str(self.passes)+\
 				"\n,  percep values =\n"+str(self.lr.coef_)
 			return my_str
 
