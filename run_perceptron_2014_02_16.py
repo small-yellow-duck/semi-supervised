@@ -276,6 +276,7 @@ def run_then_graph_semi_supervised_learning_set(data_manager,dict_diff_from_defa
 	str_date_time = str(datetime.datetime.now())[5:16].replace(":",",").replace(" ","_")
 
 	ss_params={}
+
 	ss_params["ssl_Classifier_DropoutRate_Bundle"]=\
 		classifier.Classifier_DropoutRate_Bundle(classifier.Averaged_Perceptron_Classifier(1,1000),.5)
 	ss_params["dict_test_set_Classifier_DropoutRate_Bundles"]={}
