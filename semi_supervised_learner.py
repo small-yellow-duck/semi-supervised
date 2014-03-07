@@ -18,7 +18,7 @@ class semi_supervised_learner:
 	def __init__(self,\
 				data_manager,\
 				ssl_Classifier_DropoutRate_Bundle,\
-				set_test_set_Classifier_DropoutRate_Bundles={},\
+				list_test_set_Classifier_DropoutRate_Bundles={},\
 				bool_remove_features=False,\
 				notice_for_feature_removal=None,\
 				imbalance_ratio_to_trigger_notice=10,\
@@ -29,10 +29,10 @@ class semi_supervised_learner:
 		self.data_manager=data_manager
 		self.cls_dr_for_ssl=ssl_Classifier_DropoutRate_Bundle
 		self.cls_dr_for_ssl.bool_remove_features=bool_remove_features #Add an attribute (to access in for loops)
-		self.all_cls_drs=set_test_set_Classifier_DropoutRate_Bundles.copy()
+		self.all_cls_drs=list_test_set_Classifier_DropoutRate_Bundles[:]
 		for cls_dr in self.all_cls_drs:
-			assert cls_dr.bool_remove_features==False #Add an attribute
-		self.all_cls_drs.add(self.cls_dr_for_ssl) #So now this contains all the classifiers!
+			cls_dr.bool_remove_features=False #Add an attribute
+		self.all_cls_drs.append(self.cls_dr_for_ssl) #So now this contains all the classifiers!
 
 		# self.bool_remove_features=bool_remove_features
 		assert self.cls_dr_for_ssl
@@ -76,11 +76,11 @@ class semi_supervised_learner:
 		if self.bool_warm_start:			
 			print "Training 3 times to warm up classifier"
 			((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels))=\
-					dm.__get_data__(percent_dropout=self.cls_dr.get_dr(),\
+					dm.__get_data__(percent_dropout=self.cls_dr_for_ssl.get_dr(),\
 									num_dropout_corruptions_per_point=self.num_corruptions_per_data_point,\
-									bool_targetted_dropout=self.cls_dr.bool_remove_features)
+									bool_targetted_dropout=self.cls_dr_for_ssl.bool_remove_features)
 			for i in range(3):
-				self.cls_dr.get_classifier().train(train_feats_labelled,train_labels,self.bool_warm_start)
+				self.cls_dr_for_ssl.get_classifier().train(train_feats_labelled,train_labels,self.bool_warm_start)
 		print "dm.get_fraction_labelled()",dm.get_fraction_labelled()
 		while dm.get_fraction_labelled()\
 					 < self.max_labelled_frac:
@@ -98,8 +98,10 @@ class semi_supervised_learner:
 			# self.print_status()
 			def train_classifier(cls_dr):
 				nc=self.num_corruptions_per_data_point
-				if cls_dr.get_dr() == 1:
+				if cls_dr.get_dr() == 0:
 					nc = 1
+				print "cls_dr.get_dr()",cls_dr.get_dr()
+				print "nc",nc
 				((train_feats_labelled,train_labels),train_feats_unlabelled,(test_feats,test_labels))=\
 						dm.__get_data__(percent_dropout=cls_dr.get_dr(),\
 										num_dropout_corruptions_per_point=nc,\
@@ -119,11 +121,11 @@ class semi_supervised_learner:
 				self.label_results['num_of_each_type'].append(lab_counts)
 			record_label_counts()
 
-			dm.label_top_n(self.num_to_add_each_iteration,self.cls_dr.get_classifier(),self.str_labels_to_forget)
+			dm.label_top_n(self.num_to_add_each_iteration,self.cls_dr_for_ssl.get_classifier(),self.str_labels_to_forget)
 			print "top",self.num_to_add_each_iteration,"labelled"
 
 			#Remove features that no longer help with generalization
-			if self.cls_dr.bool_remove_features:
+			if self.cls_dr_for_ssl.bool_remove_features:
 				dm.decrement_notice()
 				dm.give_notice(self.imbalance_ratio_to_trigger_notice, self.notice_for_feature_removal)
 		return self.label_results, self.test_error_results

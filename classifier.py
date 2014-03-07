@@ -108,7 +108,7 @@ class Averaged_Perceptron_Classifier(Classifier):
 
 
 	def reset(self): 
-		self.percep=linear_model.Perceptron(passes=1,warm_start=True)
+		self.percep=linear_model.Perceptron(n_iter=1,warm_start=True)
 		self.averaged_perceptron=None
 
 	def train(self,X,Y, warm_start=True):
