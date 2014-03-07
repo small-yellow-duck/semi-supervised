@@ -395,35 +395,35 @@ class Perceptron_Multilabel_Classifier(Classifier):
 		ind2 = sortedscores[:,-2]
 		
 
-		labels = ind1 + 1
+		self.labels = ind1 + 1
 		if random.random()<.05:
 			l = self.predict_labels(X)
-			assert all(l==labels)
+			assert all(l==self.labels)
 
 		assert scores.shape[0]==X.shape[0]
 		c1 = scores[np.arange(scores.shape[0]),ind1]
 		c2 = scores[np.arange(scores.shape[0]),ind2]
 
-		confidence = c1 - c2
+		self.confidence = c1 - c2
 
 		def print_stuff():
 			# print "X", X
 			# print "scores", scores
 			print "ind1", ind1
 			print "ind2", ind2
-			print "labels", labels		
-			print "confidence",confidence
+			print "labels", self.labels		
+			print "confidence",self.confidence
 			
 
 		if self.verbosity>6: print_stuff()
 		
-		return (labels, confidence)
+		return (self.labels, self.confidence)
 
 	def predict_labels(self,X):
 		#labels = np.argmax(np.dot(X[:,:], self.percep.T), axis=1) +1
-		labels = np.argmax(sp.csr_matrix.dot(X, self.percep_mat.T), axis=1) +1
+		self.labels = np.argmax(sp.csr_matrix.dot(X, self.percep_mat.T), axis=1) +1
 		
-		return labels
+		return self.labels
 
 	def __str__(self):
 		my_str=",  number of passes through the data =" + str(self.passes)
