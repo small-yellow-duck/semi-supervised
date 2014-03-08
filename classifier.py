@@ -14,7 +14,7 @@ from sklearn import linear_model
 import sys
 from scipy import sparse as sp
 
-classes_to_test={'averaged_perceptron_multilabel_classifier'} #{'perceptron_classifier'}
+classes_to_test={'perceptron_multilabel_classifier'} #{'averaged_perceptron_multilabel_classifier', 'perceptron_classifier'}
 
 class Classifier_DropoutRate_Bundle:
 	def __init__(self,classifier,dropout_rate,short_description):
@@ -359,11 +359,12 @@ class Perceptron_Multilabel_Classifier(Classifier):
 
 		if self.percep_mat == None:
 			self.percep_mat = np.zeros((len(labels), X.shape[1]))
+			#self.percep_mat = sp.csr_matrix((len(labels), X.shape[1]))
 				
 		assert self.percep_mat.shape[0] == len(labels)	
 		assert self.percep_mat.shape[1] == X.shape[1]
 		
-
+		num_features = X.shape[1]
 		#randomize the rows of X
 		#idx = range(0, X.shape[0])
 		#random.shuffle(idx)
@@ -372,7 +373,6 @@ class Perceptron_Multilabel_Classifier(Classifier):
 
 		for i in idx:
 
-			#sums = np.dot(X[i,:], self.percep.T)
 			sums = sp.csr_matrix.dot(X[i,:], self.percep_mat.T)
 			
 			best_index = np.argmax(sums)	
@@ -383,12 +383,16 @@ class Perceptron_Multilabel_Classifier(Classifier):
 			if best_label != Y[i]:
 				#update perceptron matrix
 				'''DEBUG - The compiler says this type-casting is unsafe, because it will be deprecated'''
-				self.percep_mat[best_index,:] -=  X[i,:]	
-				self.percep_mat[correct_index,:] +=  X[i,:]
+				# print self.percep_mat[best_index,:].shape
+				# print "X[i,:].shape",X[i,:].shape
+				# print "X[i,:][0].shape",X[i,:][0].shape
+				# print X[i,:].todense()[0].reshape(-1,1).shape
+				self.percep_mat[best_index,:] = self.percep_mat[best_index,:] -  X[i,:]
+				self.percep_mat[correct_index,:] = self.percep_mat[correct_index,:] + X[i,:]
 
 	def predict_labels_and_confidences(self,X):
 	
-		#scores = np.dot(X[:,:], self.percep.T)
+		#scores = np.dot(X[:,:], self.percep_mat.T)
 		scores = sp.csr_matrix.dot(X, self.percep_mat.T)
 		sortedscores = np.argsort(scores, axis=1)
 		ind1 = sortedscores[:,-1]

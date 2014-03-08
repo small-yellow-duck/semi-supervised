@@ -280,7 +280,7 @@ def run_then_graph_semi_supervised_learning_set(data_manager,dict_diff_from_defa
 	def set_default_parameters():
 		ss_params["ssl_Classifier_DropoutRate_Bundle"]=\
 			classifier.Classifier_DropoutRate_Bundle(classifier.Averaged_Perceptron_Classifier(1,1000),.5,"apcSS")
-		ss_params["list_test_set_Classifier_DropoutRate_Bundles"]=set()
+		ss_params["list_test_set_Classifier_DropoutRate_Bundles"]=[]
 		ss_params["bool_remove_features"]=False
 		ss_params["notice_for_feature_removal"]=None
 		ss_params["imbalance_ratio_to_trigger_notice"]=10
