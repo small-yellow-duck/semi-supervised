@@ -201,6 +201,9 @@ if DO_BASIC_CLASSIFICATION:
 			p.set_params(C=C)
 			p.fit(tr_X, tr_Y)
 			print_train_and_test_error(p.predict)
+		for in in range(5)
+			sfdso
+
 		print "\nLogisticRegression"
 	if "perceptron_classifier" in LEARNERS_TO_USE:
 		print "\nperceptron_classifier"

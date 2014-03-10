@@ -246,7 +246,11 @@ class Perceptron_Multilabel_Classifier(Classifier):
 
 			if best_label != Y[i]:
 				#update perceptron matrix
-				'''DEBUG - The compiler says this type-casting is unsafe, because it will be deprecated'''
+				'''DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+					- The compiler says this type-casting is unsafe, because it will be deprecated.  Maybe we can
+						1) Change it to dense, or
+						2) Just iterate through the non-zero elements and add those
+				'''
 				self.percep_mat[best_index,:] -=  X[i,:]	
 				self.percep_mat[correct_index,:] +=  X[i,:]
 

@@ -92,34 +92,18 @@
 	"buffers":
 	[
 		{
-			"file": "misc.py",
-			"settings":
-			{
-				"buffer_size": 2017,
-				"line_ending": "Windows"
-			}
-		},
-		{
 			"file": "run_perceptron_2014_02_16.py",
 			"settings":
 			{
-				"buffer_size": 13670,
+				"buffer_size": 14137,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "semi_supervised_learner.py",
+			"file": "project1.sublime-project",
 			"settings":
 			{
-				"buffer_size": 5474,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "classifier.py",
-			"settings":
-			{
-				"buffer_size": 15097,
+				"buffer_size": 188,
 				"line_ending": "Windows"
 			}
 		}
@@ -127,9 +111,21 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 392.0,
+		"height": 150.0,
 		"selected_items":
 		[
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"packin",
+				"Package Control: Install Package"
+			],
 			[
 				":w",
 				":w - Save"
@@ -151,17 +147,11 @@
 				"Project: Add Folder"
 			]
 		],
-		"width": 392.0
+		"width": 536.0
 	},
 	"console":
 	{
-		"height": 160.0,
-		"history":
-		[
-			"print \"hi\"",
-			"print A",
-			"A=100"
-		]
+		"height": 160.0
 	},
 	"distraction_free":
 	{
@@ -174,26 +164,33 @@
 	},
 	"file_history":
 	[
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/CMPT 825/NLP/CMPT825NLP/CMPT825-1141-wkrayenh/hw3/answer/project",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/run_perceptron_2014_02_16.py",
+		"/C/Users/Willem/AppData/Roaming/Sublime Text 2/Packages/User/Default (Windows).sublime-keymap",
+		"/C/Users/Willem/AppData/Roaming/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Willem/AppData/Roaming/Sublime Text 2/Packages/Default/Preferences.sublime-settings",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/classifier.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/project1.sublime-project",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/README.md",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/Thumbs.db",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/03-01_10,52_per_drs_UPTOdr0.9_per1_rfF_na2000_dr0.9_nc2_mlf0.95.png",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/03-01_10,49_per_drs_UPTOdr0.3_per1_rfF_na2000_dr0.3_nc2_mlf0.95.png",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/misc.py",
+		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/semi_supervised_learner.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/runMe_2014_01_20_BK.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/Yarowsky.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/data/namedentity/view1",
 		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/data/namedentity/gold",
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/misc.py",
 		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/Cellular_Automata_with_sets.py",
 		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/Bruces_cellular_automata.py",
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/run_perceptron_2014_02_16.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/data_manager.py",
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/classifier.py",
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/semi_supervised_learner.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/runMe_kiri_2013-12-13.py",
 		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/DL.py",
 		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/Default/Default (Windows).sublime-keymap",
 		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
 		"/C/Users/Willem/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/C/Users/Willem/Desktop/ANSWER KEY.py",
-		"/C/Users/Willem/SkyDrive/Documents/School/SFU/Research/Kiri/README.md",
 		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/for_loops.py",
 		"/C/Users/Willem/SkyDrive/Documents/Tutoring/z_General/Session Recordings/2014Sp/Noam/cellularautomata2.py"
 	],
@@ -203,7 +200,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 90.0,
+		"height": 102.0,
 		"where_history":
 		[
 			""
@@ -214,6 +211,9 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"\\",
+			"unbound",
+			"__reset_perceptron__",
 			"bool_remove_features",
 			"self.bool_remove_features",
 			"short_description",
@@ -338,10 +338,7 @@
 			"ng to predict conf",
 			"set_labels",
 			"train labels",
-			"type",
-			"array_to_kron_with.dtype",
-			"tot_train_pts",
-			"num_unlabelled"
+			"type"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -360,111 +357,23 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 1,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "misc.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2017,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1263,
-								1263
-							]
-						],
-						"settings":
-						{
-							"rulers":
-							[
-							],
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 3,
-							"translate_tabs_to_spaces": false,
-							"word_wrap": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 66.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
 					"file": "run_perceptron_2014_02_16.py",
-					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 13670,
-						"regions":
-						{
-							"bookmark_c":
-							{
-								"flags": 144,
-								"regions":
-								[
-									[
-										358,
-										358
-									]
-								]
-							},
-							"bookmark_s":
-							{
-								"flags": 144,
-								"regions":
-								[
-									[
-										13410,
-										13410
-									]
-								]
-							}
-						},
-						"selection":
-						[
-							[
-								11871,
-								11871
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": false,
-							"word_wrap": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "semi_supervised_learner.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 5474,
+						"buffer_size": 14137,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2186,
-								2186
+								112,
+								112
 							]
 						],
 						"settings":
@@ -476,98 +385,32 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
 					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
+				},
 				{
-					"buffer": 3,
-					"file": "classifier.py",
-					"semi_transient": false,
+					"buffer": 1,
+					"file": "project1.sublime-project",
 					"settings":
 					{
-						"buffer_size": 15097,
+						"buffer_size": 188,
 						"regions":
 						{
-							"bookmark_a":
-							{
-								"flags": 144,
-								"regions":
-								[
-									[
-										2850,
-										2850
-									]
-								]
-							},
-							"bookmark_c":
-							{
-								"flags": 144,
-								"regions":
-								[
-									[
-										994,
-										994
-									]
-								]
-							},
-							"bookmark_p":
-							{
-								"flags": 144,
-								"regions":
-								[
-									[
-										7897,
-										7897
-									]
-								]
-							},
-							"bookmarks":
-							{
-								"flags": 144,
-								"icon": "bookmark",
-								"regions":
-								[
-									[
-										994,
-										994
-									],
-									[
-										2850,
-										2850
-									],
-									[
-										7897,
-										7897
-									]
-								],
-								"scope": "bookmarks"
-							}
 						},
 						"selection":
 						[
 							[
-								652,
-								666
+								188,
+								188
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": false,
-							"word_wrap": true
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
 					"type": "text"
 				}
 			]
@@ -590,18 +433,11 @@
 				0,
 				1,
 				1
-			],
-			[
-				1,
-				0,
-				2,
-				1
 			]
 		],
 		"cols":
 		[
 			0.0,
-			0.614101184069,
 			1.0
 		],
 		"rows":
@@ -619,7 +455,6 @@
 	{
 		"height": 130.0
 	},
-	"project": "project1.sublime-project",
 	"replace":
 	{
 		"height": 56.0
@@ -631,20 +466,20 @@
 		"selected_items":
 		[
 			[
-				"s",
-				"semi_supervised_learner.py"
+				"ru",
+				"run_perceptron_2014_02_16.py"
 			],
 			[
 				"",
-				"13	Goto any class or function definition in the pr"
+				"/C/Users/Willem/AppData/Roaming/Sublime Text 2/Packages/User/Preferences.sublime-settings"
 			],
 			[
 				"cl",
 				"classifier.py"
 			],
 			[
-				"ru",
-				"run_perceptron_2014_02_16.py"
+				"s",
+				"semi_supervised_learner.py"
 			],
 			[
 				"8",
@@ -709,71 +544,10 @@
 		],
 		"width": 0.0
 	},
-	"select_symbol":
-	{
-		"height": 58.0,
-		"selected_items":
-		[
-			[
-				"seming",
-				"do_semi_supervised_learning"
-			],
-			[
-				"pr_l_a",
-				"predict_label_and_confidence"
-			],
-			[
-				"crs",
-				"create_synthetic_data"
-			],
-			[
-				"pr_l1",
-				"print_labels_1_feats"
-			],
-			[
-				"",
-				"argmax"
-			],
-			[
-				"ar",
-				"argmax"
-			],
-			[
-				"cr",
-				"create_data"
-			],
-			[
-				"tr",
-				"train"
-			]
-		],
-		"width": 392.0
-	},
-	"settings":
-	{
-		"last_automatic_layout":
-		[
-			[
-				0,
-				0,
-				1,
-				1
-			],
-			[
-				1,
-				0,
-				2,
-				1
-			]
-		]
-	},
 	"show_minimap": false,
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": false,
-	"side_bar_width": 76.0,
-	"status_bar_visible": true,
-	"template_settings":
-	{
-	}
+	"side_bar_width": 210.0,
+	"status_bar_visible": true
 }
